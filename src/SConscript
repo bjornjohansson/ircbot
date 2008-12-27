@@ -1,0 +1,35 @@
+sourceFiles = ['client.cpp'
+              ,'config.cpp'
+	      ,'connection/addressinfo.cpp'
+              ,'connection/socket.cpp'
+              ,'connection/connection.cpp'
+              ,'connection/connectionmanager.cpp'
+              ,'error.cpp'
+              ,'exception.cpp'
+	      ,'forkcommand.cpp'
+	      ,'irc/channel.cpp'
+	      ,'irc/message.cpp'
+	      ,'irc/prefix.cpp'
+              ,'irc/server.cpp'
+              ,'lua/lua.cpp'
+              ,'lua/luafunction.cpp'
+              ,'luaclientglue.cpp'
+              ,'main.cpp'
+	      ,'regexp/regexpmanager.cpp'
+	      ,'regexp/regexp.cpp'
+	      ,'remindermanager.cpp'
+              ,'searchidle.c'
+              ,'xml/xmldocument.cpp'
+              ,'xml/xmlparsercontext.cpp'
+              ,'xml/xmlutil.cpp'
+              ]
+
+libFiles = ['boost_filesystem'
+           ,'boost_regex'
+           ,'lua'
+           ]
+
+Import('env')
+
+env.Program(target='bot', source = sourceFiles, LIBS=libFiles)
+

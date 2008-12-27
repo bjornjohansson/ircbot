@@ -1,0 +1,7 @@
+^!ex+(.*)$ {return assert(loadstring(m[1]))()}
+test test2
+^pl([0-9]{1,})+(.*):(.*)$ {io.input(io.popen("tail -n "..m[1].." "..GetLogName(s,r).."|head -n 1|sed 's/"..m[2].."/"..m[3].."/'")); return io.read("*l")}
+^pl([0-9])+(.*):(.*)$ {io.input(io.popen("tail -n "..m[1].." "..GetLogName(s,r).."|head -n 1|sed 's/"..m[2].."/"..m[3].."/'")); return io.read("*l")}
+^pl+(.*):(.*)$ {recurse("pl2 "..m[1]..":"..m[2])}
+test test2
+apa bepa
