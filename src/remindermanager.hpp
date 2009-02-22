@@ -5,10 +5,17 @@
 #include <set>
 
 #include <boost/shared_container_iterator.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/mutex.hpp>
 
 class ReminderManager
 {
 public:
+    typedef boost::function<void (const std::string&,
+				  const std::string&,
+				  const std::string&)> ReminderCallback;
+
     struct Reminder
     {
 	time_t Timestamp;
@@ -19,7 +26,10 @@ public:
 	bool operator<(const Reminder& rhs) const;
     };
 
-    ReminderManager(const std::string& remindersFile);
+    ReminderManager(const std::string& remindersFile, 
+		    ReminderCallback callback);
+
+    virtual ~ReminderManager();
 
     void CreateReminder(time_t inNumSeconds,
 			const std::string& server,
@@ -50,8 +60,16 @@ public:
 private:
     void SaveReminders();
     void ReadReminders();
+
+    void Timer();
     
     typedef std::multiset<Reminder> ReminderContainer;
     ReminderContainer reminders_;
     std::string remindersFile_;
+    boost::mutex timerMutex_;
+    mutable boost::shared_mutex reminderMutex_;
+    boost::condition_variable timerCondition_;
+    std::auto_ptr<boost::thread> timerThread_;
+    bool runTimer_;
+    ReminderCallback reminderCallback_;
 };

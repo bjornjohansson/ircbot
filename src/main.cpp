@@ -17,9 +17,16 @@ int main(int argc, char* argv[])
 
     Client client(argv[1]);
 
-    ConnectionManager& connectionManager = ConnectionManager::Instance();
+//    ConnectionManager& connectionManager = ConnectionManager::Instance();
 
-    connectionManager.Loop();
+    std::cout<<"Sleeping"<<std::endl;
+    while(true)
+    {
+	sleep(30000);
+    }
+
+
+//    connectionManager.Loop();
 
 /*
     try

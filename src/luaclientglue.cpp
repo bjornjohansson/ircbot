@@ -4,7 +4,6 @@
 #include "exception.hpp"
 #include "regexp/regexpmanager.hpp"
 #include "forkcommand.hpp"
-#include "connection/connectionmanager.hpp"
 
 #include <boost/bind.hpp>
 
@@ -26,7 +25,8 @@ LuaClientGlue::LuaClientGlue(Lua& lua, Client& client)
     : lua_(lua)
     , client_(client)
     , regExpManager_(client.GetConfig().GetRegExpsFilename())
-    , reminderManager_(client.GetConfig().GetRemindersFilename())
+    , reminderManager_(client.GetConfig().GetRemindersFilename(),
+		       boost::bind(&Client::SendMessage, &client, _1, _2, _3))
     , recursions_(0)
 {
     AddFunction(&LuaClientGlue::JoinChannel, "Join");
@@ -60,7 +60,6 @@ LuaClientGlue::LuaClientGlue(Lua& lua, Client& client)
 	client_.RegisterForMessages(boost::bind(&LuaClientGlue::OnMessageEvent,
 						this, _1, _2, _3, _4));
 
-    CheckReminders();
 }
 
 int LuaClientGlue::JoinChannel(lua_State* lua)
@@ -399,8 +398,6 @@ int LuaClientGlue::AddReminder(lua_State* lua)
 
     reminderManager_.CreateReminder(seconds, server, channel, message);
 
-    CheckReminders();
-
     return 0;
 }
 
@@ -463,13 +460,9 @@ int LuaClientGlue::RecurseMessage(lua_State* lua)
 
     lua_pop(lua, lua_gettop(lua));
 
-    std::cerr<<"Trying to recurse '"<<message<<"'..."<<std::endl;
-
     StringContainerPtr lines = ProcessMessageEvent(server, fromNick,
 						   fromUser, fromHost,
 						   to, message);
-
-    std::cerr<<"done"<<std::endl;
 
     std::stringstream concat;
 
@@ -612,22 +605,6 @@ void LuaClientGlue::OnMessageEvent(const std::string& server,
     }
 }
 
-void LuaClientGlue::OnTimerEvent()
-{
-    ReminderManager::ReminderIteratorRange iterators;
-    iterators = reminderManager_.GetDueReminders();
-
-    for(ReminderManager::ReminderIterator reminder = iterators.first;
-	reminder != iterators.second;
-	++reminder)
-    {
-	client_.SendMessage(reminder->Server, reminder->Channel,
-			    reminder->Message);
-    }
-
-    CheckReminders();
-}
-
 std::string LuaClientGlue::RegExpOperation(const std::string& reply,
 					   const std::string& message,
 					   const RegExp& regexp)
@@ -673,22 +650,6 @@ void LuaClientGlue::AddFunction(Function f, const std::string& name)
 {
     functionHandles_.push_back(
 	lua_.RegisterFunction(name, boost::bind(f, this, _1)));
-}
-
-void LuaClientGlue::CheckReminders()
-{
-    try
-    {
-	const ReminderManager::Reminder& r=reminderManager_.GetNextReminder();
-	ConnectionManager& connectionManager=ConnectionManager::Instance();
-
-	connectionManager.RegisterTimer(r.Timestamp-time(0),
-			boost::bind(&LuaClientGlue::OnTimerEvent, this));
-
-    }
-    catch ( Exception& )
-    {
-    }
 }
 
 int LuaClientGlue::FillRegExpTable(lua_State* lua,
@@ -737,8 +698,6 @@ LuaClientGlue::ProcessMessageEvent(const std::string& server,
 	directMessage = message.substr(nick.size()+1);
 	boost::algorithm::trim_left(directMessage);
 	direct = true;
-	std::cout<<"Scrubbed blocking call string: '"<<directMessage
-		 <<"'"<<std::endl;
     }
 
     for(BlockingCallContainer::iterator blockingCall = blockingCalls_.begin();
@@ -749,7 +708,6 @@ LuaClientGlue::ProcessMessageEvent(const std::string& server,
 	if ( ( direct || !blockingCall->directOnly_ ) &&
 	     boost::regex_search(directMessage, blockingCall->regexp_) )
 	{
-	    std::cout<<"blocking call matched"<<std::endl;
 	    result = CallEventHandler(blockingCall->functionStatePair_,
 				      server, fromNick, fromUser, fromHost,
 				      to, directMessage);
@@ -757,7 +715,6 @@ LuaClientGlue::ProcessMessageEvent(const std::string& server,
 	    {
 		return result;
 	    }
-	    std::cout<<"blocking call gave no results"<<std::endl;
 	}
     }
 

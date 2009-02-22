@@ -11,11 +11,23 @@ bool ReminderManager::Reminder::operator<(const Reminder& rhs) const
     return Timestamp < rhs.Timestamp;
 }
 
-ReminderManager::ReminderManager(const std::string& remindersFile)
+ReminderManager::ReminderManager(const std::string& remindersFile,
+				 ReminderManager::ReminderCallback callback)
     : remindersFile_(remindersFile)
+    , runTimer_(true)
+    , reminderCallback_(callback)
 {
     ReadReminders();
+    timerThread_.reset(new boost::thread(boost::bind(&ReminderManager::Timer,
+						     this)));
 }
+
+ReminderManager::~ReminderManager()
+{
+    runTimer_ = false;
+    timerCondition_.notify_all();
+}
+
 
 void ReminderManager::CreateReminder(time_t inNumSeconds,
 				     const std::string& server,
@@ -24,9 +36,23 @@ void ReminderManager::CreateReminder(time_t inNumSeconds,
 {
     Reminder reminder = {time(0)+inNumSeconds, server, channel, message};
 
+    const Reminder& nextReminder = GetNextReminder();
+    time_t nextTime = nextReminder.Timestamp;
+
+    // Exclusive lock
+    boost::lock_guard<boost::shared_mutex> lock(reminderMutex_);
+
     reminders_.insert(reminder);
 
     SaveReminders();
+
+    if ( reminder.Timestamp < nextTime )
+    {
+	// If the new reminder is going to fire earlier than the current
+        // reminder we were waiting for we need to signal the timer thread
+        // to pick up the new reminder instead.
+	timerCondition_.notify_all();
+    }
 }
     
 ReminderManager::ReminderIteratorRange
@@ -36,6 +62,20 @@ ReminderManager::GetDueReminders(bool erase)
     DueRemindersContainerPtr dueReminders(new DueRemindersContainer());
 
     time_t currentTime = time(0);
+
+    std::auto_ptr<boost::shared_lock<boost::shared_mutex> > sharedLock;
+    std::auto_ptr<boost::lock_guard<boost::shared_mutex> > lockGuard;
+
+    if ( erase )
+    {
+	lockGuard.reset(
+	    new boost::lock_guard<boost::shared_mutex>(reminderMutex_));
+    }
+    else
+    {
+	sharedLock.reset(
+	    new boost::shared_lock<boost::shared_mutex>(reminderMutex_));
+    }
 
     for(ReminderContainer::iterator reminder = reminders_.begin();
 	reminder != reminders_.end(); )
@@ -76,6 +116,8 @@ ReminderManager::FindReminders(const std::string& server,
     typedef boost::shared_ptr<DueRemindersContainer> DueRemindersContainerPtr;
     DueRemindersContainerPtr foundReminders(new DueRemindersContainer());
 
+    boost::shared_lock<boost::shared_mutex> lock(reminderMutex_);
+
     try
     {
 	boost::regex regexp(searchString,
@@ -93,8 +135,7 @@ ReminderManager::FindReminders(const std::string& server,
     }
     catch ( boost::regex_error& e )
     {
-	throw Exception(__FILE__, __LINE__, e.what()
-);
+	throw Exception(__FILE__, __LINE__, e.what());
     }
     return boost::make_shared_container_range(foundReminders);
 }
@@ -102,6 +143,8 @@ ReminderManager::FindReminders(const std::string& server,
 void ReminderManager::CleanDueReminders()
 {
     time_t currentTime = time(0);
+
+    boost::lock_guard<boost::shared_mutex> lock(reminderMutex_);
 
     for(ReminderContainer::iterator reminder = reminders_.begin();
 	reminder != reminders_.end(); )
@@ -122,20 +165,65 @@ void ReminderManager::CleanDueReminders()
 
 const ReminderManager::Reminder& ReminderManager::GetNextReminder() const
 {
-    time_t currentTime = time(0);
+    boost::shared_lock<boost::shared_mutex> lock(reminderMutex_);
 
-    for(ReminderContainer::iterator reminder = reminders_.begin();
-	reminder != reminders_.end();
-	++reminder)
+    if ( reminders_.begin() != reminders_.end() )
     {
-	if ( reminder->Timestamp > currentTime )
-	{
-	    return *reminder;
-	}
+	return *reminders_.begin();
     }
     throw Exception(__FILE__, __LINE__, "No upcoming reminder");
 }
 
+void ReminderManager::Timer()
+{
+    std::cout<<"Reminder thread starting"<<std::endl;
+    while ( runTimer_ )
+    {
+	boost::unique_lock<boost::mutex> lock(timerMutex_);
+	
+	boost::posix_time::ptime remindTime(boost::posix_time::pos_infin);
+	try
+	{
+	    remindTime = boost::posix_time::from_time_t(
+		GetNextReminder().Timestamp);
+	    if ( remindTime < boost::get_system_time() )
+	    {
+		remindTime = boost::get_system_time();
+	    }
+	}
+	catch (Exception&)
+	{
+	    // There are no remaining reminders, wait until notification
+	    // with no timeout
+	}
+	
+	if ( !timerCondition_.timed_wait(lock, remindTime) )
+	{
+	    if ( runTimer_ )
+	    {
+		// The timer timed out and so we should trigger
+		// the reminder
+
+		ReminderIteratorRange iterators = GetDueReminders();
+		for(ReminderIterator reminder = iterators.first;
+		    reminder != iterators.second;
+		    ++reminder)
+		{
+		    try
+		    {
+			reminderCallback_(reminder->Server,
+					  reminder->Channel,
+					  reminder->Message);
+		    }
+		    catch ( ... )
+		    {
+			// Catch all exceptions and ignore them
+		    }
+		}
+	    }
+	}
+    }
+}
 
 void ReminderManager::SaveReminders()
 {

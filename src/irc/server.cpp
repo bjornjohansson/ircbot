@@ -76,8 +76,14 @@ void Server::Send(const std::string& data)
     std::copy(data.begin(), data.end(), std::back_inserter(buffer));
     buffer.push_back('\r');
     buffer.push_back('\n');
+try
+{
     connection_->Send(buffer);
-
+}
+catch ( Exception& e )
+{
+    std::cerr<<e.GetMessage()<<std::endl;
+}
 #ifdef DEBUG
     std::clog<<host_<<"> "<<data<<std::endl;
 #endif

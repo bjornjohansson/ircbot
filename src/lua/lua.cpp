@@ -121,8 +121,6 @@ int Lua::CallDispatch(lua_State* lua)
 {
     std::string name = lua_tostring(lua, lua_upvalueindex(1));
 
-    std::clog<<"Call dispatch receiving call for '"<<name<<"'"<<std::endl;
-
     LuaFunctionsMap::iterator f = luaFunctions_.find(name);
 
     if ( f != luaFunctions_.end() )

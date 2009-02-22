@@ -7,6 +7,7 @@
 #include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/asio.hpp>
 
 class Connection;
 
@@ -20,41 +21,26 @@ public:
      */
     boost::shared_ptr<Connection> Connect(const std::string& host,
 					  unsigned short port);
-    
-    typedef boost::function<void ()> TimerCallback;
-
-    /**
-     * @param seconds The number of seconds to wait until timer fires
-     */
-    void RegisterTimer(time_t seconds, TimerCallback callback);
-
-    void Loop();
-
-    static void SignalHandler(int);
 
 private:
     ConnectionManager();
     ConnectionManager(const ConnectionManager&);
     ConnectionManager& operator=(const ConnectionManager&);
-    
+
+    void Loop();
     void CheckConnections();
 
     static std::auto_ptr<ConnectionManager> instance_;
 
-//    std::auto_ptr<boost::thread> thread_;
+    std::auto_ptr<boost::thread> thread_;
+
+    boost::asio::io_service ioService_;
+
     typedef boost::weak_ptr<Connection> ConnectionPtr;
     typedef std::list<ConnectionPtr> ConnectionContainer;
     ConnectionContainer connections_;
-
-    // Unix timestamp when timer fires and callback
-    typedef std::pair<time_t,TimerCallback> TimerCallbackPair;
-    typedef std::list<TimerCallbackPair> TimerContainer;
-    TimerContainer timers_;
-
-    static int alarmPipe_[2];
-    TimerCallback timerCallback_;
+    boost::mutex loopMutex_;
+    boost::condition_variable loopCondition_;
 };
-
-
 
 #endif

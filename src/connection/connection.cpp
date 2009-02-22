@@ -1,5 +1,4 @@
 #include "connection.hpp"
-#include "addressinfo.hpp"
 #include "../exception.hpp"
 #include "../error.hpp"
 
@@ -11,16 +10,17 @@
 #endif
 
 #include <boost/weak_ptr.hpp>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <errno.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/bind.hpp>
 
 const time_t CONNECTION_TIMEOUT_SECONDS = 300;
 
-Connection::Connection(const std::string& host, const unsigned short port)
-    : host_(host),
+Connection::Connection(boost::asio::io_service& ioService,
+		       const std::string& host,
+		       const unsigned short port)
+    : ioService_(ioService),
+      socket_(ioService),
+      host_(host),
       port_(port),
       lastReception_(time(0)),
       connected_(false)
@@ -30,6 +30,7 @@ Connection::Connection(const std::string& host, const unsigned short port)
 
 void Connection::Reconnect()
 {
+    socket_.close();
     Connect();
 }
 
@@ -42,19 +43,22 @@ Connection::ReceiverHandle Connection::RegisterReceiver(Receiver r)
 
 void Connection::Send(const std::vector<char>& data)
 {
-    if ( socket_ && connected_ )
+    if ( socket_.is_open() && connected_ )
     {
-	ssize_t sent = 0;
-	ssize_t size = 0;
-	
-	while ( sent != static_cast<ssize_t>(data.size()) && size >= 0 )
+	try
 	{
-	    size = send(**socket_, &data[sent], data.size()-sent, 0);
-	    sent += size;
+	    std::size_t bytes = boost::asio::write(socket_,
+						   boost::asio::buffer(data));
+	    if ( bytes != data.size() )
+	    {
+		std::cerr<<"Unable to write on connection"<<std::endl;
+		throw Exception(__FILE__, __LINE__,
+				"Unable to send the correct amount of data");
+	    }
 	}
-	if ( size == -1 )
+	catch ( boost::system::system_error& e )
 	{
-	    throw Exception(__FILE__, __LINE__, "Could not send data");
+	    throw Exception(__FILE__, __LINE__, e.what());
 	}
     }
     else
@@ -64,21 +68,106 @@ void Connection::Send(const std::vector<char>& data)
     }
 }
 
-void Connection::Receive()
+Connection::OnConnectHandle
+Connection::RegisterOnConnectCallback(OnConnectCallback c)
 {
-    std::vector<char> buffer(1024);
+    OnConnectHandle handle(new OnConnectCallback(c));
+    onConnectCallbacks_.push_back(OnConnectCallbackPtr(handle));
+    return handle;
+}
 
-    ssize_t b = recv(**socket_, &buffer[0], buffer.size(), MSG_DONTWAIT);
 
-    if ( b > 0 )
+bool Connection::IsTimedOut() const
+{
+    return lastReception_+CONNECTION_TIMEOUT_SECONDS < time(0);
+}
+
+bool Connection::IsConnected() const
+{
+    return connected_;
+}
+
+void Connection::Connect()
+{
+    try
+    {
+	std::clog<<"Connecting to "<<host_<<":"<<port_<<"..."<<std::endl;
+	// Create a resolver and a query for the supplied host and port
+	using namespace boost::asio::ip;
+	tcp::resolver resolver(ioService_);
+	tcp::resolver::query query(host_,
+				   boost::lexical_cast<std::string>(port_));
+
+	tcp::resolver::iterator endpointIt = resolver.resolve(query);
+	tcp::endpoint endpoint = *endpointIt;
+	socket_.async_connect(endpoint,
+			      boost::bind(&Connection::OnConnect, this,
+					  boost::asio::placeholders::error,
+					  ++endpointIt));
+    }
+    catch ( boost::bad_lexical_cast& e )
+    {
+	throw Exception(__FILE__, __LINE__, e.what());
+    }
+}
+
+void Connection::OnConnect(const boost::system::error_code& error,
+			   boost::asio::ip::tcp::resolver::iterator endpointIt)
+{
+    if ( !error )
+    {
+	connected_ = true;
+
+	// Notify all OnConnect callbacks that the connection was successful
+	OnConnectCallbackContainer::iterator callback =
+	    onConnectCallbacks_.begin();
+	while ( callback != onConnectCallbacks_.end() )
+	{
+	    if ( OnConnectHandle onConnectCallback = callback->lock() )
+	    {
+		(*onConnectCallback)(*this);
+		++callback;
+	    }
+	    else
+	    {
+		// If a callback is no longer valid we remove it
+		callback = onConnectCallbacks_.erase(callback);
+	    }
+	}
+	CreateReceiver();
+    }
+    else if ( endpointIt != boost::asio::ip::tcp::resolver::iterator() )
+    {
+	boost::asio::ip::tcp::endpoint endpoint = *endpointIt;
+	socket_.async_connect(endpoint,
+			      boost::bind(&Connection::OnConnect, this,
+					  boost::asio::placeholders::error,
+					  ++endpointIt));
+    }
+    else
+    {
+	std::cerr<<"Failed to connect: "<<error.message()<<std::endl;
+    }
+}
+
+
+void Connection::CreateReceiver()
+{
+    socket_.async_read_some(boost::asio::buffer(buffer_),
+			    boost::bind(&Connection::Receive, this, 
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred));
+}
+
+void Connection::Receive(const boost::system::error_code& error,
+			 const std::size_t& bytes)
+{
+    if ( !error )
     {
 	lastReception_ = time(0);
 
-	std::vector<char> data(b);
-	for(ssize_t i = 0; i<b; ++i)
-	{
-	    data[i] = buffer[i];
-	}
+	std::vector<char> data(bytes);
+	std::copy(buffer_.begin(), buffer_.begin()+bytes, data.begin());
 
 	for(ReceiverContainer::iterator i = receivers_.begin();
 	    i != receivers_.end();)
@@ -94,99 +183,10 @@ void Connection::Receive()
 		i = receivers_.erase(i);
 	    }
 	}
+	CreateReceiver();
     }
-}
-
-Connection::OnConnectHandle
-Connection::RegisterOnConnectCallback(OnConnectCallback c)
-{
-    OnConnectHandle handle(new OnConnectCallback(c));
-    onConnectCallbacks_.push_back(OnConnectCallbackPtr(handle));
-    return handle;
-}
-
-
-int Connection::GetSocket() const
-{
-    if ( socket_ && **socket_ != -1 )
+    else
     {
-	return **socket_;
+	std::cerr<<error.message()<<std::endl;
     }
-    throw Exception(__FILE__, __LINE__, "No valid socket");
-}
-
-bool Connection::IsTimedOut() const
-{
-    return lastReception_+CONNECTION_TIMEOUT_SECONDS < time(0);
-}
-
-bool Connection::IsConnected() const
-{
-    return connected_;
-}
-
-void Connection::Connect()
-{
-    std::stringstream ss;
-    ss<<port_;
-    try
-    {
-	AddressInfo addressInfo(host_, ss.str());
-
-	for (const struct addrinfo* address = *addressInfo;
-	     address;
-	     address = address->ai_next )
-	{
-	    if ( address->ai_socktype != SOCK_STREAM )
-	    {
-		continue;
-	    }
-	    socket_.reset(new Socket(address->ai_family,
-				     address->ai_socktype,
-				     address->ai_protocol));
-	    connected_ = false;
-	    if (connect(**socket_,address->ai_addr,address->ai_addrlen) == 0)
-	    {
-		// Set last reception time to current time to indicate that
-		// this connection has refreshed its timeout timer
-		lastReception_ = time(0);
-		connected_ = true;
-		
-		OnConnectCallbackContainer::iterator callback =
-		    onConnectCallbacks_.begin();
-		while ( callback != onConnectCallbacks_.end() )
-		{
-		    if ( OnConnectHandle onConnectCallback = callback->lock() )
-		    {
-			(*onConnectCallback)(*this);
-			++callback;
-		    }
-		    else
-		    {
-			// If a callback is no longer valid we remove it
-			callback = onConnectCallbacks_.erase(callback);
-		    }
-		}
-
-		break;
-	    }
-	}
-    }
-    catch ( Exception& e )
-    {
-	std::clog<<e.GetMessage()<<std::endl;
-    }
-
-    if ( !connected_ )
-    {
-	std::clog<<"Connecting failed"<<std::endl;
-    }
-
-/*
-    if ( !connected )
-    {
-	std::string error = GetErrorDescription(errno);
-	throw Exception(__FILE__, __LINE__, error);
-    }
-*/
 }

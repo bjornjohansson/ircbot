@@ -24,8 +24,9 @@ sourceFiles = ['client.cpp'
               ,'xml/xmlutil.cpp'
               ]
 
-libFiles = ['boost_filesystem'
-           ,'boost_regex'
+libFiles = ['boost_filesystem-mt'
+           ,'boost_regex-mt'
+           ,'boost_thread-mt'
            ,'lua'
            ]
 

@@ -55,8 +55,6 @@ public:
     void OnMessageEvent(const std::string& server, const Irc::Prefix& from,
 			const std::string& to, const std::string& message);
 
-    void OnTimerEvent();
-
     std::string RegExpOperation(const std::string& reply,
 				const std::string& message,
 				const RegExp& regexp);
@@ -66,8 +64,6 @@ private:
     void AddFunction(Function f, const std::string& name);
 
     void CheckArgument(lua_State* lua, int argumentNumber, int expectedType);
-
-    void CheckReminders();
 
     int FillRegExpTable(lua_State* lua,
 			RegExpManager::RegExpIteratorRange regExps);
