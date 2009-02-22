@@ -1,16 +1,19 @@
 
-local function StringSplit(string, delim)
+local function StringSplit(str, delim)
    local fragments = {}
 
-   local lastIndex = 1-#delim
-   local index = string.find(string, delim)
+   local delimSize = #delim
+   local lastIndex = 1-delimSize
+   local index = string.find(str, delim)
    while index do
-      local fragment = string.sub(string, lastIndex+#delim, index-1)
+      local fragment = string.sub(str, lastIndex+delimSize, index-1)
       table.insert(fragments, fragment)
       lastIndex = index
-      index = string.find(string, delim, index+#delim)
+      index = string.find(str, delim, index+delimSize)
    end
-   table.insert(fragments, string.sub(string, lastIndex+#delim))
+   if lastIndex+delimSize < #str then
+      table.insert(fragments, string.sub(str, lastIndex+delimSize))
+   end
 
    return fragments
 end
@@ -201,19 +204,11 @@ local function RegExp_CheckCommands(message)
 end
 
 local function RegExp_ChooseRandom(openBracket, content, closeBracket)
-   local outcomes = {}
+   local outcomes = StringSplit(content, "|")
 
-   local lastIndex = 0
-   local index = string.find(content, "|")
-   while index do
-      local outcome = string.sub(content, lastIndex+1, index-1)
-      table.insert(outcomes, outcome)
-      lastIndex = index
-      index = string.find(content, "|", index+1)
-   end
-   table.insert(outcomes, string.sub(content, lastIndex+1))
+   local outcome = math.random(#outcomes)
 
-   return outcomes[math.random(#outcomes)]
+   return outcomes[outcome]
 end
 
 local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
