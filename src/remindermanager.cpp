@@ -36,8 +36,16 @@ void ReminderManager::CreateReminder(time_t inNumSeconds,
 {
     Reminder reminder = {time(0)+inNumSeconds, server, channel, message};
 
-    const Reminder& nextReminder = GetNextReminder();
-    time_t nextTime = nextReminder.Timestamp;
+    time_t nextTime = std::numeric_limits<time_t>::max();
+    try
+    {
+	const Reminder& nextReminder = GetNextReminder();
+	nextTime = nextReminder.Timestamp;
+    }
+    catch (Exception&)
+    {
+	// No reminders, keep the timestamp at a silly high number
+    }
 
     // Exclusive lock
     boost::lock_guard<boost::shared_mutex> lock(reminderMutex_);

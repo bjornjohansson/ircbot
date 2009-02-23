@@ -1,7 +1,7 @@
 #include "client.hpp"
 #include "exception.hpp"
 #include "searchidle.h"
-#include "luaclientglue.hpp"
+#include "glue/gluemanager.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -310,11 +310,7 @@ void Client::ManageLogStreams()
 
 void Client::InitLua()
 {
-    luaClientGlue_.reset();
-    lua_.reset();
-
     lua_.reset(new Lua(config_.GetScriptsDirectory()));
-    luaClientGlue_.reset(new LuaClientGlue(*lua_, *this));
-
+    GlueManager::Instance().Reset(lua_, this);
     lua_->LoadScripts();
 }

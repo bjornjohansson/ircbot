@@ -46,7 +46,17 @@ Lua::~Lua()
 	i != myRegisteredFunctions_.end();
 	++i)
     {
-	luaFunctions_.erase(*i);
+	LuaFunctionsMap::iterator f = luaFunctions_.find(*i);
+	if ( f != luaFunctions_.end() )
+	{
+	    if ( LuaFunctionHandle func = f->second.first.lock() )
+	    {
+		if ( f->second.second == lua_ )
+		{
+		    luaFunctions_.erase(*i);
+		}
+	    }
+	}
     }
 
     if ( lua_ )
@@ -107,12 +117,13 @@ Lua::LuaFunctionHandle Lua::RegisterFunction(const std::string& name,
 
     LuaFunctionHandle result(new LuaFunc(f));
 
-    luaFunctions_[name] = LuaFunctionWeakPtr(result);
+    luaFunctions_[name] = FunctionStatePair(LuaFunctionWeakPtr(result), lua_);
     myRegisteredFunctions_.push_back(name);
 
     lua_pushstring(lua_, name.c_str());
     lua_pushcclosure(lua_, &Lua::CallDispatch, 1);
     lua_setglobal(lua_, name.c_str());
+
     return result;
 }
 
@@ -125,7 +136,7 @@ int Lua::CallDispatch(lua_State* lua)
 
     if ( f != luaFunctions_.end() )
     {
-	if ( LuaFunctionHandle func = f->second.lock() )
+	if ( LuaFunctionHandle func = f->second.first.lock() )
 	{
 	    try
 	    {

@@ -40,7 +40,8 @@ private:
     std::string scriptsDirectory_;
 
     typedef boost::weak_ptr<LuaFunc> LuaFunctionWeakPtr;
-    typedef std::map<std::string, LuaFunctionWeakPtr> LuaFunctionsMap;
+    typedef std::pair<LuaFunctionWeakPtr,lua_State*> FunctionStatePair;
+    typedef std::map<std::string, FunctionStatePair> LuaFunctionsMap;
     static LuaFunctionsMap luaFunctions_;
     typedef std::list<std::string> StringContainer;
     StringContainer myRegisteredFunctions_;

@@ -1,72 +1,39 @@
 #pragma once
 
-#include "lua/luafunction.hpp"
-#include "lua/lua.hpp"
-#include "regexp/regexpmanager.hpp"
-#include "remindermanager.hpp"
-#include "irc/prefix.hpp"
-
-#include <string>
-#include <list>
-#include <map>
 #include <vector>
+#include <string>
 
-#include <lua.h>
+#include "glue.hpp"
+#include "../lua/lua.hpp"
+#include "../lua/luafunction.hpp"
+#include "../irc/prefix.hpp"
 
-#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
-#include <boost/regex.hpp>
+#include <boost/shared_ptr.hpp>
 
 class Client;
-class RegExpManager;
 
-class LuaClientGlue
+class GlueManager
 {
 public:
-    LuaClientGlue(Lua& lua, Client& client);
+    static GlueManager& Instance();
 
-    int JoinChannel(lua_State* lua);
-    int Send(lua_State* lua);
-    int RegisterForEvent(lua_State* lua);
-    int GetLogName(lua_State* lua);
-    int GetLastLine(lua_State* lua);
-    int GetMyNick(lua_State* lua);
-    int GetChannelNicks(lua_State* lua);
+    void RegisterGlue(Glue* glue);
 
-    int AddRegExp(lua_State* lua);
-    int DeleteRegExp(lua_State* lua);
-    int RegExpMatchAndReply(lua_State* lua);
-    int RegExpFindMatch(lua_State* lua);
-    int RegExpFindRegExp(lua_State* lua);
-    int RegExpChangeReply(lua_State* lua);
-    int RegExpChangeRegExp(lua_State* lua);
-    int RegExpMoveUp(lua_State* lua);
-    int RegExpMoveDown(lua_State* lua);
+    void Reset(boost::shared_ptr<Lua> lua, Client* client);
 
-    int RunCommand(lua_State* lua);
-
-    int AddReminder(lua_State* lua);
-    int FindReminder(lua_State* lua);
-
-    int RecurseMessage(lua_State* lua);
-
-    int RegisterBlockingCall(lua_State* lua);
-
-    void OnMessageEvent(const std::string& server, const Irc::Prefix& from,
-			const std::string& to, const std::string& message);
-
-    std::string RegExpOperation(const std::string& reply,
-				const std::string& message,
-				const RegExp& regexp);
+    typedef boost::function<int (lua_State*)> GlueFunction;
+    void AddFunction(GlueFunction, const std::string& name);
 
 private:
-    typedef int (LuaClientGlue::*Function)(lua_State*);
-    void AddFunction(Function f, const std::string& name);
+    GlueManager();
+    GlueManager(const GlueManager&);
+    GlueManager& operator=(const GlueManager&);
+
+    typedef std::vector<Glue*> GlueContainer;
+    GlueContainer glues_;
 
     void CheckArgument(lua_State* lua, int argumentNumber, int expectedType);
-
-    int FillRegExpTable(lua_State* lua,
-			RegExpManager::RegExpIteratorRange regExps);
 
     typedef std::list<std::string> StringContainer;
     typedef boost::shared_ptr<StringContainer> StringContainerPtr;
@@ -86,8 +53,8 @@ private:
 					const std::string& to,
 					const std::string& message);
 
-    Lua& lua_;
-    Client& client_;
+    boost::shared_ptr<Lua> lua_;
+    Client* client_;
 
     typedef std::list<FunctionStatePair> FunctionContainer;
     typedef std::map<std::string,FunctionContainer> EventFunctionMap;
@@ -102,9 +69,6 @@ private:
 				  const std::string&)> MessageEventReceiver;
     typedef boost::shared_ptr<MessageEventReceiver> MessageEventReceiverHandle;
     MessageEventReceiverHandle messageHandle_;
-
-    RegExpManager regExpManager_;
-    ReminderManager reminderManager_;
 
     typedef boost::shared_ptr<FunctionStatePair> FunctionStatePairPtr;
     FunctionStatePairPtr regExpOperation_;
@@ -123,4 +87,5 @@ private:
     BlockingCallContainer blockingCalls_;
 
     int recursions_;
+
 };
