@@ -76,14 +76,14 @@ void Server::Send(const std::string& data)
     std::copy(data.begin(), data.end(), std::back_inserter(buffer));
     buffer.push_back('\r');
     buffer.push_back('\n');
-try
-{
-    connection_->Send(buffer);
-}
-catch ( Exception& e )
-{
-    std::cerr<<e.GetMessage()<<std::endl;
-}
+    try
+    {
+	connection_->Send(buffer);
+    }
+    catch ( Exception& e )
+    {
+	std::cerr<<e.GetMessage()<<std::endl;
+    }
 #ifdef DEBUG
     std::clog<<host_<<"> "<<data<<std::endl;
 #endif
@@ -93,8 +93,7 @@ void Server::Receive(Connection& connection, const std::vector<char>& data)
 {
     // Copy everything but '\r' as some irc servers don't comply
     std::remove_copy(data.begin(), data.end(),
-		     std::back_inserter(receiveBuffer_),
-		     '\r');
+		     std::back_inserter(receiveBuffer_), '\r');
 
     for(std::string::size_type pos = receiveBuffer_.find('\n');
 	pos != std::string::npos;
@@ -110,6 +109,7 @@ void Server::OnConnect(Connection& connection)
     ChangeNick(nick_);
     SendUserString(nick_, nick_);
 
+    boost::shared_lock<boost::shared_mutex> lock(channelsMutex_);
     for(ChannelKeyMap::iterator channel = channels_.begin();
 	channel != channels_.end();
 	++channel)
@@ -130,12 +130,14 @@ const std::string& Server::GetHostName() const
 
 const std::string& Server::GetNick() const
 {
+    boost::shared_lock<boost::shared_mutex> lock(nickMutex_);
     return nick_;
 }
 
 
 Server::ReceiverHandle Server::RegisterReceiver(Receiver receiver)
 {
+    boost::upgrade_lock<boost::shared_mutex> lock(receiversMutex_);
     boost::shared_ptr<Receiver> handle(new Receiver(receiver));
     receivers_.push_back(boost::weak_ptr<Receiver>(handle));
     return handle;
@@ -155,6 +157,7 @@ std::string Server::GetLogName(const std::string& target) const
 
 void Server::JoinChannel(const std::string& channel, const std::string& key)
 {
+    boost::upgrade_lock<boost::shared_mutex> lock(channelsMutex_);
     channels_[channel] = key;
     if ( connection_ && connection_->IsConnected() )
     {
@@ -172,6 +175,7 @@ void Server::JoinChannel(const std::string& channel, const std::string& key)
 void Server::ChangeNick(const std::string& nick)
 {
     Send("NICK "+nick);
+    boost::upgrade_lock<boost::shared_mutex> lock(nickMutex_);
     nick_ = nick;
 }
 
@@ -206,6 +210,7 @@ void Server::SendMessage(const std::string& target, const std::string& message)
 const Server::NickContainer&
 Server::GetChannelNicks(const std::string& channel) const
 {
+    boost::shared_lock<boost::shared_mutex> lock(channelsMutex_);
     ChannelNicksContainer::const_iterator channelNicks =
 	channelNicks_.find(channel);
     if ( channelNicks != channelNicks_.end() )
@@ -251,6 +256,7 @@ void Server::OnText(const std::string& text)
 	{
 	    std::stringstream stream(message[3]);
 
+	    boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	    while ( stream.good() )
 	    {
 		std::string nick;
@@ -269,16 +275,19 @@ void Server::OnText(const std::string& text)
     }
     else if ( message.GetCommand() == "366" )
     {
+	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	appendingChannelNicks_ = false;
     }
     else if ( message.GetCommand() == "PART" && message.size() >= 1 )
     {
+	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	const std::string& nick = message.GetPrefix().GetNick();
 	const std::string& channel = message[0];
 	channelNicks_[channel].erase(nick);
     }
     else if ( message.GetCommand() == "QUIT" )
     {
+	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	const std::string& nick = message.GetPrefix().GetNick();
 	for(ChannelNicksContainer::iterator channel = channelNicks_.begin();
 	    channel != channelNicks_.end();
@@ -289,6 +298,7 @@ void Server::OnText(const std::string& text)
     }
     else if ( message.GetCommand() == "JOIN" && message.size() >= 1 )
     {
+	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	const std::string& nick = message.GetPrefix().GetNick();
 	const std::string& channel = message[0];
 	channelNicks_[channel].insert(nick);
@@ -298,6 +308,7 @@ void Server::OnText(const std::string& text)
 	const std::string& oldNick = message.GetPrefix().GetNick();
 	const std::string& newNick = message[0];
 
+	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	for(ChannelNicksContainer::iterator channel = channelNicks_.begin();
 	    channel != channelNicks_.end();
 	    ++channel)
@@ -311,6 +322,7 @@ void Server::OnText(const std::string& text)
 	const std::string& channel = message[0];
 	const std::string& victim = message[1];
 
+	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	ChannelNicksContainer::iterator nicks = channelNicks_.find(channel);
 	if ( nicks != channelNicks_.end() )
 	{
@@ -336,6 +348,7 @@ void Server::OnText(const std::string& text)
 	}
     }
 
+    boost::shared_lock<boost::shared_mutex> lock(receiversMutex_);
     // Send message to receivers
     for(ReceiverContainer::iterator i = receivers_.begin();
 	i != receivers_.end();)

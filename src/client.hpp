@@ -104,6 +104,7 @@ private:
     typedef std::pair<Server, Server::ReceiverHandle> ServerAndHandle;
     typedef std::map<std::string,ServerAndHandle> ServerHandleMap;
     ServerHandleMap servers_;
+    mutable boost::shared_mutex serverMutex_;
     Config config_;
 
     typedef std::map<std::string, Config::Server> ServerIdMap;
@@ -117,6 +118,7 @@ private:
     typedef boost::weak_ptr<MessageEventReceiver> MessageEventReceiverPtr;
     typedef std::list<MessageEventReceiverPtr> MessageEventReceiverContainer;
     MessageEventReceiverContainer messageEventReceivers_;
+    boost::shared_mutex receiverMutex_;
 
     boost::shared_ptr<Lua> lua_;
 

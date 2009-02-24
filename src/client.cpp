@@ -38,10 +38,7 @@ Client::Client(const std::string& config)
 	    serverSettings_[i->GetId()] = *i;
 	    Server& server = Connect(i->GetId(), i->GetHost(), i->GetPort(),
 				     i->GetNick());
-/*
-	    server.ChangeNick(i->GetNick());
-	    server.SendUserString(i->GetNick(), i->GetNick());
-*/
+
 	    for(Config::Server::ChannelIterator j = i->GetChannelsBegin();
 		j != i->GetChannelsEnd();
 		++j)
@@ -99,6 +96,7 @@ void Client::SendMessage(const std::string& serverId,
 Client::MessageEventReceiverHandle Client::RegisterForMessages(
     MessageEventReceiver r)
 {
+    boost::upgrade_lock<boost::shared_mutex> lock(receiverMutex_);
     MessageEventReceiverHandle handle(new MessageEventReceiver(r));
     messageEventReceivers_.push_back(MessageEventReceiverPtr(handle));
     return handle;
@@ -154,6 +152,7 @@ Client::GetChannelNicks(const std::string& serverId,
 
 Server& Client::GetServerFromId(const std::string& id)
 {
+    boost::shared_lock<boost::shared_mutex> lock(serverMutex_);
     ServerHandleMap::iterator server = servers_.find(id);
     if ( server != servers_.end() )
     {
@@ -167,6 +166,7 @@ Server& Client::GetServerFromId(const std::string& id)
 
 const Server& Client::GetServerFromId(const std::string& id) const
 {
+    boost::shared_lock<boost::shared_mutex> lock(serverMutex_);
     ServerHandleMap::const_iterator server = servers_.find(id);
     if ( server != servers_.end() )
     {
@@ -190,13 +190,19 @@ Server& Client::Connect(const std::string& id,
     }
     logDirectory += id + "/";
 
-    Server server(id, host, port, nick, logDirectory);
-    Server::ReceiverHandle handle = server.RegisterReceiver(
-	boost::bind(&Client::Receive, this, _1, _2));
+    {
+	boost::upgrade_lock<boost::shared_mutex> lock(serverMutex_);
 
-    servers_.insert(ServerHandleMap::value_type(id, ServerAndHandle(server,
+	Server server(id, host, port, nick, logDirectory);
+	Server::ReceiverHandle handle = server.RegisterReceiver(
+	    boost::bind(&Client::Receive, this, _1, _2));
+	
+	servers_.insert(ServerHandleMap::value_type(id,
+						    ServerAndHandle(server,
 								    handle)));
+    }
 
+    boost::shared_lock<boost::shared_mutex> lock(serverMutex_);
     ServerHandleMap::iterator s = servers_.find(id);
 
     if ( s == servers_.end() )
@@ -237,7 +243,7 @@ void Client::OnPrivMsg(Server& server, const Irc::Message& message)
 		cleanedMessage.erase(pos);
 	    }
 	}
-
+	boost::shared_lock<boost::shared_mutex> lock(receiverMutex_);
 	for(MessageEventReceiverContainer::iterator i =
 		messageEventReceivers_.begin();
 	    i != messageEventReceivers_.end();

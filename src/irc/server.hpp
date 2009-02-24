@@ -13,6 +13,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/function.hpp>
+#include <boost/thread.hpp>
 
 class Server
 {
@@ -89,6 +90,7 @@ private:
 
     typedef std::list<boost::weak_ptr<Receiver> > ReceiverContainer;
     ReceiverContainer receivers_;
+    boost::shared_mutex receiversMutex_;
 
     boost::shared_ptr<Connection> connection_;
     Connection::ReceiverHandle connectionReceiver_;
@@ -100,6 +102,7 @@ private:
     std::string host_;
     std::string logDirectory_;
     std::string nick_;
+    mutable boost::shared_mutex nickMutex_;
 
     typedef boost::shared_ptr<std::ofstream> OfstreamPtr;
     typedef std::pair<OfstreamPtr,time_t> OfstreamAndTimestamp;
@@ -108,10 +111,12 @@ private:
 
     typedef std::map<std::string, std::string> ChannelKeyMap;
     ChannelKeyMap channels_;
+    mutable boost::shared_mutex channelsMutex_;
 
     typedef std::map<std::string, NickContainer> ChannelNicksContainer;
     ChannelNicksContainer channelNicks_;
     bool appendingChannelNicks_;
+    boost::shared_mutex channelNicksMutex_;
 };
 
 
