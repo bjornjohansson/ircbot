@@ -43,6 +43,7 @@ Connection::ReceiverHandle Connection::RegisterReceiver(Receiver r)
 
 void Connection::Send(const std::vector<char>& data)
 {
+    boost::lock_guard<boost::mutex> lock(sendMutex_);
     if ( socket_.is_open() && connected_ )
     {
 	try

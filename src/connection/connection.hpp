@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
+#include <boost/thread.hpp>
 
 class ConnectionManager;
 
@@ -84,6 +85,7 @@ private:
     OnConnectCallbackContainer onConnectCallbacks_;
     time_t lastReception_;
     bool connected_;
+    boost::mutex sendMutex_;
 };
 
 #endif
