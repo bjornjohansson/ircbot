@@ -223,7 +223,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
    end
 
  
-   if (reply:find("\\e") or 0) ~= 1 then
+   if (reply:find("\\e") or 0) ~= 1 and (reply:find("\\E") or 0 ) ~= 1 then
       while matches ~= 0 and loops < 10 do
 	 matches = 0
 	 reply, matches = string.gsub(reply, "({)([^{}]*)(})",
@@ -252,9 +252,16 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
    if string.find(reply, "\\e") == 1 or string.find(reply, "\\E") == 1 then
       reply = reply:gsub("\\\\", "\\")
       reply = Execute(string.sub(reply, 3))
-   elseif string.find(reply, "\\r") == 1 then
-      reply = RecurseMessage(RegExp_Server, RegExp_FromNick, RegExp_FromUser,
-			     RegExp_FromHost, RegExp_To, string.sub(reply, 3))
+   end
+   local pos = string.find(reply, "\\r")
+   if pos then
+      local prefix = ""
+      if pos > 1 then
+	 prefix = string.sub(reply, 1, pos-1)
+      end
+      reply = prefix..RecurseMessage(RegExp_Server, RegExp_FromNick,
+				     RegExp_FromUser, RegExp_FromHost,
+				     RegExp_To, string.sub(reply, pos+2))
    end
 
    return reply
