@@ -3,56 +3,47 @@
 
 #include <vector>
 #include <sstream>
+#include <iostream>
 
 #include <boost/algorithm/string/replace.hpp>
 
-const int REGCOMP_FLAGS = REG_EXTENDED | REG_ICASE;
+const boost::regex::flag_type REGEX_FLAGS =
+    boost::regex::extended|boost::regex::icase;
 const int MAX_SUB_MATCHES = 10;
 
 RegExp::RegExp(const std::string& regExp, const std::string& reply)
     : regExp_(regExp)
     , reply_(reply)
 {
-    regex_t pattern;
-    int regerr = regcomp(&pattern, regExp_.c_str(), REGCOMP_FLAGS);
-
-    if ( regerr != 0 )
+    try
     {
-	size_t size = regerror(regerr, &pattern, 0, 0);
+	pattern_.assign(regExp, REGEX_FLAGS);
+    }
+    catch ( boost::regex_error& e )
+    {
 	std::string errorMessage = "Could not compile regexp";
-	if ( size < 1024 )
+	if ( e.what() )
 	{
-	    std::vector<char> buffer(size, 0);
-	    size = regerror(regerr, &pattern, &buffer[0],
-			    static_cast<size_t>(buffer.size()));
-	    errorMessage = &buffer[0];
+	    errorMessage = e.what();
 	}
 	throw Exception(__FILE__, __LINE__, errorMessage);
     }
-
-    pattern_.reset(new RegExpPattern(pattern));
 }
 
 std::string RegExp::FindMatchAndReply(const std::string& message) const
 {
     std::string result;
-    if ( pattern_ )
+
+    if ( !pattern_.empty() )
     {
-	typedef std::vector<regmatch_t> MatchContainer;
-	MatchContainer matches(MAX_SUB_MATCHES);
-	if ( regexec(pattern_->GetPattern(), message.c_str(),
-		     static_cast<size_t>(matches.size()), &matches[0], 0) == 0)
+	boost::smatch matches;
+	if ( boost::regex_search(message, matches, pattern_) )
 	{
 	    result = reply_;
-	    for(unsigned int i = 0;
-		i < matches.size() && matches[i].rm_so != -1;
-		++i)
+	    for(unsigned int i = 0; i < matches.size(); ++i)
 	    {
 		std::stringstream ss;
 		ss<<"\\"<<i;
-		regoff_t start = matches[i].rm_so;
-		regoff_t size = matches[i].rm_eo - matches[i].rm_so;
-		std::string replacement = message.substr(start, size);
 
 		for(std::string::size_type pos = result.find(ss.str());
 		    pos != std::string::npos;
@@ -60,8 +51,8 @@ std::string RegExp::FindMatchAndReply(const std::string& message) const
 		{
 		    if ( pos == 0 || result[pos-1] != '\\' )
 		    {
-			result.replace(pos, ss.str().size(), replacement);
-			pos += size-1;
+			result.replace(pos, ss.str().size(), matches[i].str());
+			pos += matches[i].str().size()-1;
 		    }
 		    else if ( pos > 0 && result[pos-1] == '\\' )
 		    {

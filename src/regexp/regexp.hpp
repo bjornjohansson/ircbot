@@ -5,6 +5,7 @@
 
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/regex.hpp>
 
 class RegExp
 {
@@ -35,5 +36,6 @@ private:
     std::string regExp_, reply_;
 
     typedef boost::shared_ptr<RegExpPattern> RegExpPatternPtr;
-    RegExpPatternPtr pattern_;
+    //RegExpPatternPtr pattern_;
+    boost::regex pattern_;
 };
