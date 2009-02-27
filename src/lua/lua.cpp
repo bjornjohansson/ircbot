@@ -24,7 +24,6 @@ Lua::Lua(const std::string& scriptsDirectory)
 	    {"", luaopen_base},
 	    {LUA_TABLIBNAME, luaopen_table},
 	    {LUA_STRLIBNAME, luaopen_string},
-	    {LUA_IOLIBNAME, luaopen_io},
 	    {LUA_MATHLIBNAME, luaopen_math},
 	    {0, 0}
 	};
@@ -82,11 +81,11 @@ void Lua::LoadScripts()
 	    {
 		LuaFunction function = LoadFile(path);
 		functions.push_back(function);
-		std::clog<<"done"<<std::endl;
+		std::cout<<"done"<<std::endl;
 	    }
 	    catch ( Exception& e )
 	    {
-		std::clog<<"failed: '"<<e.GetMessage()<<"'"<<std::endl;
+		std::cout<<"failed: '"<<e.GetMessage()<<"'"<<std::endl;
 	    }
 	}
     }
