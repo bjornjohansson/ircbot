@@ -7,7 +7,13 @@
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
+#ifdef LUA_EXTERN
+extern "C" {
 #include <lauxlib.h>
+}
+#else
+#include <lauxlib.h>
+#endif
 
 const int MAX_RECURSIONS = 10;
 const unsigned int MAX_SEND_LINES = 10;

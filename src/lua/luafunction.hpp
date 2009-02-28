@@ -1,6 +1,12 @@
 #pragma once
 
+#ifdef LUA_EXTERN
+extern "C" {
 #include <lua.h>
+}
+#else
+#include <lua.h>
+#endif
 
 #include <boost/shared_ptr.hpp>
 

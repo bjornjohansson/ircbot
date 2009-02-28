@@ -9,8 +9,15 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/bind.hpp>
 
+#ifdef LUA_EXTERN
+extern "C" {
 #include <lualib.h>
 #include <lauxlib.h>
+}
+#else
+#include <lualib.h>
+#include <lauxlib.h>
+#endif
 
 Lua::LuaFunctionsMap Lua::luaFunctions_;
 

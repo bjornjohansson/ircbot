@@ -1,7 +1,14 @@
 #include "glue.hpp"
 
+#ifdef LUA_EXTERN
+extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
+}
+#else
+#include <lua.h>
+#include <lauxlib.h>
+#endif
 
 #include <boost/bind.hpp>
 

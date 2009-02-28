@@ -4,7 +4,13 @@
 
 #include <utility>
 
+#ifdef LUA_EXTERN
+extern "C" {
 #include <lua.h>
+}
+#else
+#include <lua.h>
+#endif
 
 class Client;
 class Lua;

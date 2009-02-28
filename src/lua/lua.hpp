@@ -10,7 +10,14 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 
+#ifdef LUA_EXTERN
+extern "C" {
 #include <lua.h>
+}
+#else
+#include <lua.h>
+#endif
+
 
 class Lua
 {

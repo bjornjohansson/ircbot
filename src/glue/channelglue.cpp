@@ -5,8 +5,13 @@
 
 #include <boost/bind.hpp>
 
+#ifdef LUA_EXTERN
+extern "C" {
 #include <lauxlib.h>
-
+}
+#else
+#include <lauxlib.h>
+#endif
 class ChannelGlue : public Glue
 {
 public:

@@ -1,8 +1,15 @@
 #include "luafunction.hpp"
 #include "../exception.hpp"
 
+#ifdef LUA_EXTERN
+extern "C" {
 #include <lualib.h>
 #include <lauxlib.h>
+}
+#else
+#include <lualib.h>
+#include <lauxlib.h>
+#endif
 
 LuaFunction::LuaFunction(lua_State* lua)
     : lua_(lua)
