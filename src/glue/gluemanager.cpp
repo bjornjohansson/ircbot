@@ -20,7 +20,6 @@ void GlueManager::RegisterGlue(Glue* glue)
 void GlueManager::Reset(boost::shared_ptr<Lua> lua, Client* client)
 {
     lua_ = lua;
-    client_ = client;
 
     for(GlueContainer::iterator glue = glues_.begin();
 	glue != glues_.end();
