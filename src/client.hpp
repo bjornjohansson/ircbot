@@ -9,8 +9,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-class LuaClientGlue;
-
 class Client
 {
 public:
@@ -121,6 +119,6 @@ private:
     boost::shared_mutex receiverMutex_;
 
     boost::shared_ptr<Lua> lua_;
-
-    boost::shared_ptr<LuaClientGlue> luaClientGlue_;
+    boost::mutex runMutex_;
+    boost::condition_variable runCondition_;
 };

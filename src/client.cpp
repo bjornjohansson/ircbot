@@ -55,10 +55,9 @@ Client::Client(const std::string& config)
 
 void Client::Run()
 {
-    while ( servers_.size() > 0  )
-    {
-	sleep(30000);
-    }
+    boost::unique_lock<boost::mutex> lock(runMutex_);
+    
+    runCondition_.wait(lock);
 }
 
 void Client::Receive(Server& server, const Irc::Message& message)
@@ -223,6 +222,11 @@ void Client::OnPrivMsg(Server& server, const Irc::Message& message)
 	 (to == server.GetNick() && text == "reload") )
     {
 	InitLua();
+    }
+    else if ( text == (server.GetNick()+": quit") ||
+	      (to == server.GetNick() && text == "quit" ))
+    {
+        runCondition_.notify_all();
     }
     else if ( text.find("\1VERSION") == 0 )
     {

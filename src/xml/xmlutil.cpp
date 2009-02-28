@@ -3,6 +3,17 @@
 
 #include <vector>
 
+// This is a class that merely calls xmlCleanupParser on destruction.
+// Create one global object of this class and it'll call the cleanup
+// on application exit.
+class XmlParserCleaner
+{
+public:
+    XmlParserCleaner() {}
+    ~XmlParserCleaner() { xmlCleanupParser(); }
+};
+XmlParserCleaner xmlParserCleaner;
+
 std::string ConvertUtf8ToLat1(const std::string& text)
 {
     std::vector<unsigned char> buffer(text.size()+1, 0);

@@ -15,34 +15,11 @@ int main(int argc, char* argv[])
 	return 0;
     }
 
-    Client client(argv[1]);
-
-//    ConnectionManager& connectionManager = ConnectionManager::Instance();
-
-    std::cout<<"Sleeping"<<std::endl;
-    while(true)
     {
-	sleep(30000);
+        Client client(argv[1]);
+
+	std::cout<<"Running client"<<std::endl;
+	client.Run();
     }
-
-
-//    connectionManager.Loop();
-
-/*
-    try
-    {
-      Server server(host);
-
-      while(true)
-      {
-	  sleep(30000);
-//	  server.Wait();
-      }
-    }
-    catch ( Exception& e )
-    {
-	std::cout<<e.GetMessage()<<std::endl;
-    }
-    return 0;
-*/
+    std::cout<<"Client exited"<<std::endl;
 }

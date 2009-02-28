@@ -63,6 +63,7 @@ Server& Server::operator=(const Server& rhs)
     host_ = rhs.host_;
     nick_ = rhs.nick_;
     logDirectory_ = rhs.logDirectory_;
+    channels_ = rhs.channels_;
     channelNicks_ = rhs.channelNicks_;
     appendingChannelNicks_ = rhs.appendingChannelNicks_;
 

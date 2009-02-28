@@ -41,17 +41,24 @@ boost::shared_ptr<Connection> ConnectionManager::Connect(const std::string& h,
 }
 
 ConnectionManager::ConnectionManager()
+    : run_(true)
 {
     thread_.reset(new boost::thread(boost::bind(&ConnectionManager::Loop,
 						this)));
 }
 
+ConnectionManager::~ConnectionManager()
+{
+    boost::unique_lock<boost::mutex> lock(loopMutex_);
+    run_ = false;
+    loopCondition_.notify_all();
+}
+
 void ConnectionManager::Loop()
 {
     std::cout<<"ConnectionManager thread starting"<<std::endl;
-    bool run = true;
 
-    while ( run )
+    while ( run_ )
     {
 	// Wait for a set amount of time between each run to throttle
 	// reconnect attempts. Any newly created connections will signal

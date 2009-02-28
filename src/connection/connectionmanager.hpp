@@ -14,6 +14,8 @@ class Connection;
 class ConnectionManager
 {
 public:
+    virtual ~ConnectionManager();
+
     static ConnectionManager& Instance();
 
     /**
@@ -41,6 +43,7 @@ private:
     ConnectionContainer connections_;
     boost::mutex loopMutex_;
     boost::condition_variable loopCondition_;
+    bool run_;
 };
 
 #endif
