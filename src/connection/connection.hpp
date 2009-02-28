@@ -83,9 +83,11 @@ private:
     typedef boost::weak_ptr<OnConnectCallback> OnConnectCallbackPtr;
     typedef std::list<OnConnectCallbackPtr> OnConnectCallbackContainer;
     OnConnectCallbackContainer onConnectCallbacks_;
+    boost::shared_mutex callbacksMutex_;
     time_t lastReception_;
     bool connected_;
     boost::mutex sendMutex_;
+    mutable boost::shared_mutex connectedMutex_;
 };
 
 #endif

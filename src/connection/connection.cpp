@@ -85,6 +85,7 @@ bool Connection::IsTimedOut() const
 
 bool Connection::IsConnected() const
 {
+    boost::shared_lock<boost::shared_mutex> lock(connectedMutex_);
     return connected_;
 }
 
@@ -117,8 +118,12 @@ void Connection::OnConnect(const boost::system::error_code& error,
 {
     if ( !error )
     {
-	connected_ = true;
+        {
+	    boost::upgrade_lock<boost::shared_mutex> lock(connectedMutex_);
+	    connected_ = true;
+	}
 
+	boost::shared_lock<boost::shared_mutex> lock(callbacksMutex_);
 	// Notify all OnConnect callbacks that the connection was successful
 	OnConnectCallbackContainer::iterator callback =
 	    onConnectCallbacks_.begin();
@@ -132,6 +137,7 @@ void Connection::OnConnect(const boost::system::error_code& error,
 	    else
 	    {
 		// If a callback is no longer valid we remove it
+	        boost::upgrade_lock<boost::shared_mutex> lock(callbacksMutex_);
 		callback = onConnectCallbacks_.erase(callback);
 	    }
 	}

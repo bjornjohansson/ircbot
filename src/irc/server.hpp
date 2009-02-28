@@ -108,6 +108,7 @@ private:
     typedef std::pair<OfstreamPtr,time_t> OfstreamAndTimestamp;
     typedef std::map<std::string, OfstreamAndTimestamp> LogStreamMap;
     LogStreamMap logStreams_;
+    boost::mutex logMutex_;
 
     typedef std::map<std::string, std::string> ChannelKeyMap;
     ChannelKeyMap channels_;

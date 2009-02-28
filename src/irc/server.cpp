@@ -379,6 +379,7 @@ void Server::RegisterSelfAsReceiver()
 void Server::Log(const std::string& target,
 		 const std::string& text)
 {
+    boost::lock_guard<boost::mutex> lock(logMutex_);
     std::string logFile = GetLogName(target);
 
     time_t currentTime = time(0);
