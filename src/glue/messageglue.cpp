@@ -380,7 +380,7 @@ MessageGlue::CallEventHandler(FunctionStatePair functionStatePair,
 	lua_pushstring(lua, fromHost.c_str());
 	lua_pushstring(lua, to.c_str());
 	lua_pushstring(lua, message.c_str());
-	if ( lua_pcall(lua, 6, LUA_MULTRET, 0) == 0 )
+	if ( lua_->FunctionCall(lua, 6, LUA_MULTRET) == 0 )
 	{
 	    int resultCount = lua_gettop(lua);
 	    

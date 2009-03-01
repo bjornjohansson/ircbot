@@ -249,7 +249,7 @@ std::string RegexpGlue::RegExpOperation(const std::string& reply,
 		lua_pushstring(lua, message.c_str());
 		lua_pushstring(lua, regexp.GetRegExp().c_str());
 		lua_pushstring(lua, regexp.GetReply().c_str());
-		if ( lua_pcall(lua, 4, 1, 0) == 0 )
+		if ( lua_->FunctionCall(lua, 4, 1) == 0 )
 		{
 		    if ( lua_isstring(lua, -1) )
 		    {

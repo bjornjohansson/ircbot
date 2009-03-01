@@ -9,6 +9,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
+#include <boost/thread.hpp>
 
 #ifdef LUA_EXTERN
 extern "C" {
@@ -33,15 +34,21 @@ public:
 				       LuaFunc f,
 				       bool replace = true);
 
-    static int CallDispatch(lua_State* lua);
-
-    int FunctionCall(lua_State* lua);
+    int FunctionCall(lua_State* lua, int argCount, int resultCount);
 
 private:
+    static int CallDispatch(lua_State* lua);
+
     /**
      * @throw Exception if file cannot be loaded
      */
     LuaFunction LoadFile(const std::string& filename);
+
+    static void LuaHook(lua_State* lua, lua_Debug* debug);
+
+    typedef std::map<lua_State*, time_t> StateCallTimeMap;
+    static StateCallTimeMap stateCallTimes_;
+    static boost::shared_mutex callTimeMutex_;
 
     lua_State* lua_;
     std::string scriptsDirectory_;

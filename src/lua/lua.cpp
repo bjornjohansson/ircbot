@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 Lua::LuaFunctionsMap Lua::luaFunctions_;
+Lua::StateCallTimeMap Lua::stateCallTimes_;
+boost::shared_mutex Lua::callTimeMutex_;
+
+const int CALL_TIMEOUT = 45;
 
 Lua::Lua(const std::string& scriptsDirectory)
     : lua_(lua_open()),
@@ -43,6 +47,8 @@ Lua::Lua(const std::string& scriptsDirectory)
 	    lua_pushstring(lua_, lib->name);
 	    lua_call(lua_, 1, 0);
 	}
+
+	lua_sethook(lua_,&Lua::LuaHook, LUA_MASKCOUNT, 1);
     }
 }
 
@@ -133,6 +139,15 @@ Lua::LuaFunctionHandle Lua::RegisterFunction(const std::string& name,
     return result;
 }
 
+int Lua::FunctionCall(lua_State* lua, int argCount, int resultCount)
+{
+    assert(lua == lua_);
+    {
+	boost::upgrade_lock<boost::shared_mutex> lock(callTimeMutex_);
+	stateCallTimes_[lua] = time(0);
+    }
+    return lua_pcall(lua, argCount, resultCount, 0);
+}
 
 int Lua::CallDispatch(lua_State* lua)
 {
@@ -196,4 +211,18 @@ LuaFunction Lua::LoadFile(const std::string& filename)
     lua_pop(lua_,1);
 
     return luaFunction;
+}
+
+void Lua::LuaHook(lua_State* lua, lua_Debug* debug)
+{
+    boost::shared_lock<boost::shared_mutex> lock(callTimeMutex_);
+
+    StateCallTimeMap::iterator stateCallTime = stateCallTimes_.find(lua);
+    if ( stateCallTime != stateCallTimes_.end() )
+    {
+	if ( time(0) - stateCallTime->second > CALL_TIMEOUT )
+	{
+	    luaL_error(lua, "Excessive execution time, aborting.");
+	}
+    }
 }
