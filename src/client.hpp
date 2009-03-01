@@ -99,7 +99,8 @@ private:
 
     void InitLua();
 
-    typedef std::pair<Server, Server::ReceiverHandle> ServerAndHandle;
+    typedef boost::shared_ptr<Server> ServerPtr;
+    typedef std::pair<ServerPtr, Server::ReceiverHandle> ServerAndHandle;
     typedef std::map<std::string,ServerAndHandle> ServerHandleMap;
     ServerHandleMap servers_;
     mutable boost::shared_mutex serverMutex_;

@@ -155,7 +155,7 @@ Server& Client::GetServerFromId(const std::string& id)
     ServerHandleMap::iterator server = servers_.find(id);
     if ( server != servers_.end() )
     {
-	return server->second.first;
+	return *server->second.first;
     }
     else
     {
@@ -169,7 +169,7 @@ const Server& Client::GetServerFromId(const std::string& id) const
     ServerHandleMap::const_iterator server = servers_.find(id);
     if ( server != servers_.end() )
     {
-	return server->second.first;
+	return *server->second.first;
     }
     else
     {
@@ -192,8 +192,8 @@ Server& Client::Connect(const std::string& id,
     {
 	boost::upgrade_lock<boost::shared_mutex> lock(serverMutex_);
 
-	Server server(id, host, port, nick, logDirectory);
-	Server::ReceiverHandle handle = server.RegisterReceiver(
+	ServerPtr server(new Server(id, host, port, nick, logDirectory));
+	Server::ReceiverHandle handle = server->RegisterReceiver(
 	    boost::bind(&Client::Receive, this, _1, _2));
 	
 	servers_.insert(ServerHandleMap::value_type(id,
@@ -209,7 +209,7 @@ Server& Client::Connect(const std::string& id,
 	throw Exception(__FILE__, __LINE__, "No matching server");
     }
 
-    return s->second.first;
+    return *s->second.first;
 }
 
 void Client::OnPrivMsg(Server& server, const Irc::Message& message)

@@ -14,8 +14,9 @@
 #include <boost/weak_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
+#include <boost/utility.hpp>
 
-class Server
+class Server : boost::noncopyable
 {
 public:
 /*
@@ -38,13 +39,12 @@ public:
 	   unsigned int port,
 	   const std::string& logsDirectory,
 	   const std::string& nick);
-    Server(const Server& rhs);
+//    Server(const Server& rhs);
+    virtual ~Server();
 
-    Server& operator=(const Server& rhs);
+//    Server& operator=(const Server& rhs);
     
     void Send(const std::string& data);
-    void Receive(Connection& connection, const std::vector<char>& data);
-    void OnConnect(Connection& connection);
 
     const std::string& GetId() const;
     const std::string& GetHostName() const;
@@ -76,6 +76,9 @@ public:
     
 
 private:
+    void Receive(Connection& connection, const std::vector<char>& data);
+    void OnConnect(Connection& connection);
+
     void OnText(const std::string& text);
 
     void RegisterSelfAsReceiver();
@@ -92,11 +95,13 @@ private:
     ReceiverContainer receivers_;
     boost::shared_mutex receiversMutex_;
 
-    boost::shared_ptr<Connection> connection_;
+    Connection connection_;
+
     Connection::ReceiverHandle connectionReceiver_;
     Connection::OnConnectHandle onConnectCallback_;
 
     std::string receiveBuffer_;
+    boost::mutex callbackMutex_;
 
     std::string id_;
     std::string host_;

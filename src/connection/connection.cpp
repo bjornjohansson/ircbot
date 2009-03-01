@@ -14,29 +14,92 @@
 #include <boost/bind.hpp>
 
 const time_t CONNECTION_TIMEOUT_SECONDS = 300;
+// Number of seconds before attempting a new reconnect
+const int RECONNECT_TIMEOUT = 60;
 
-Connection::Connection(boost::asio::io_service& ioService,
-		       const std::string& host,
-		       const unsigned short port)
-    : ioService_(ioService),
-      socket_(ioService),
-      host_(host),
-      port_(port),
-      lastReception_(time(0)),
-      connected_(false)
+Connection::Connection()
+    : socket_(ioService_)
+    , port_(0)
+    , lastReception_(0)
+    , connected_(false)
+    , run_(true)
+      
 {
-    Connect();
+    thread_.reset(new boost::thread(boost::bind(&Connection::Loop, this)));
+}
+
+Connection::Connection(const std::string& host, const unsigned short port)
+    : socket_(ioService_)
+    , port_(0)
+    , lastReception_(0)
+    , connected_(false)
+    , run_(true)
+{
+    thread_.reset(new boost::thread(boost::bind(&Connection::Loop, this)));
+    Connect(host, port);
+}
+
+Connection::~Connection()
+{
+    {
+	boost::lock_guard<boost::mutex> lock(socketMutex_);
+	socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+	socket_.close();
+    }
+    {
+	boost::unique_lock<boost::mutex> lock(workAvailableMutex_);
+	run_ = false;
+	workAvailable_.notify_all();
+    }
+    thread_->join();
+}
+
+void Connection::Connect(const std::string& host, const unsigned short port)
+{
+    try
+    {
+	host_ = host;
+	port_ = port;
+
+	boost::system::error_code error;
+	socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
+	socket_.close(error);
+
+	std::clog<<"Connecting to "<<host_<<":"<<port_<<"..."<<std::endl;
+	// Create a resolver and a query for the supplied host and port
+	using namespace boost::asio::ip;
+	tcp::resolver resolver(ioService_);
+	tcp::resolver::query query(host_,
+				   boost::lexical_cast<std::string>(port_));
+
+	tcp::resolver::iterator endpointIt = resolver.resolve(query);
+	tcp::endpoint endpoint = *endpointIt;
+	socket_.async_connect(endpoint,
+			      boost::bind(&Connection::OnConnect, this,
+					  boost::asio::placeholders::error,
+					  ++endpointIt));
+	workAvailable_.notify_all();
+    }
+    catch ( boost::bad_lexical_cast& e )
+    {
+	throw Exception(__FILE__, __LINE__, e.what());
+    }
+    catch ( boost::system::system_error& e )
+    {
+	throw Exception(__FILE__, __LINE__, e.what());
+    }
 }
 
 void Connection::Reconnect()
 {
-    socket_.close();
-    Connect();
+    assert(port_ != 0 && !host_.empty());
+    Connect(host_, port_);
 }
 
 Connection::ReceiverHandle Connection::RegisterReceiver(Receiver r)
 {
     ReceiverHandle handle(new Receiver(r));
+    boost::upgrade_lock<boost::shared_mutex> lock(receiversMutex_);
     receivers_.push_back(boost::weak_ptr<Receiver>(handle));
     return handle;
 }
@@ -44,7 +107,7 @@ Connection::ReceiverHandle Connection::RegisterReceiver(Receiver r)
 void Connection::Send(const std::vector<char>& data)
 {
     boost::lock_guard<boost::mutex> lock(sendMutex_);
-    if ( socket_.is_open() && connected_ )
+    if ( socket_.is_open() && *connected_ )
     {
 	try
 	{
@@ -73,6 +136,7 @@ Connection::OnConnectHandle
 Connection::RegisterOnConnectCallback(OnConnectCallback c)
 {
     OnConnectHandle handle(new OnConnectCallback(c));
+    boost::upgrade_lock<boost::shared_mutex> lock(callbacksMutex_);
     onConnectCallbacks_.push_back(OnConnectCallbackPtr(handle));
     return handle;
 }
@@ -85,32 +149,7 @@ bool Connection::IsTimedOut() const
 
 bool Connection::IsConnected() const
 {
-    boost::shared_lock<boost::shared_mutex> lock(connectedMutex_);
-    return connected_;
-}
-
-void Connection::Connect()
-{
-    try
-    {
-	std::clog<<"Connecting to "<<host_<<":"<<port_<<"..."<<std::endl;
-	// Create a resolver and a query for the supplied host and port
-	using namespace boost::asio::ip;
-	tcp::resolver resolver(ioService_);
-	tcp::resolver::query query(host_,
-				   boost::lexical_cast<std::string>(port_));
-
-	tcp::resolver::iterator endpointIt = resolver.resolve(query);
-	tcp::endpoint endpoint = *endpointIt;
-	socket_.async_connect(endpoint,
-			      boost::bind(&Connection::OnConnect, this,
-					  boost::asio::placeholders::error,
-					  ++endpointIt));
-    }
-    catch ( boost::bad_lexical_cast& e )
-    {
-	throw Exception(__FILE__, __LINE__, e.what());
-    }
+    return *connected_;
 }
 
 void Connection::OnConnect(const boost::system::error_code& error,
@@ -118,10 +157,8 @@ void Connection::OnConnect(const boost::system::error_code& error,
 {
     if ( !error )
     {
-        {
-	    boost::upgrade_lock<boost::shared_mutex> lock(connectedMutex_);
-	    connected_ = true;
-	}
+	connected_ = true;
+	lastReception_ = time(0);
 
 	boost::shared_lock<boost::shared_mutex> lock(callbacksMutex_);
 	// Notify all OnConnect callbacks that the connection was successful
@@ -160,10 +197,9 @@ void Connection::OnConnect(const boost::system::error_code& error,
 
 void Connection::CreateReceiver()
 {
+    boost::lock_guard<boost::mutex> lock(socketMutex_);
     socket_.async_read_some(boost::asio::buffer(buffer_),
-			    boost::bind(&Connection::Receive, this, 
-					boost::asio::placeholders::error,
-					boost::asio::placeholders::bytes_transferred));
+			    boost::bind(&Connection::Receive, this, _1, _2));
 }
 
 void Connection::Receive(const boost::system::error_code& error,
@@ -176,6 +212,7 @@ void Connection::Receive(const boost::system::error_code& error,
 	std::vector<char> data(bytes);
 	std::copy(buffer_.begin(), buffer_.begin()+bytes, data.begin());
 
+	boost::shared_lock<boost::shared_mutex> lock(receiversMutex_);
 	for(ReceiverContainer::iterator i = receivers_.begin();
 	    i != receivers_.end();)
 	{
@@ -187,6 +224,7 @@ void Connection::Receive(const boost::system::error_code& error,
 	    else
 	    {
 		// If a receiver is no longer valid we remove it
+		boost::upgrade_lock<boost::shared_mutex> lock(receiversMutex_);
 		i = receivers_.erase(i);
 	    }
 	}
@@ -194,6 +232,43 @@ void Connection::Receive(const boost::system::error_code& error,
     }
     else
     {
-	std::cerr<<error.message()<<std::endl;
+	std::cerr<<"Connection::Receive: "<<error.message()<<std::endl;
+    }
+}
+
+void Connection::Loop()
+{
+    std::cout<<"Connection thread "<<boost::this_thread::get_id()
+	     <<" starting"<<std::endl;
+
+    boost::unique_lock<boost::mutex> lock(workAvailableMutex_);
+
+    while ( run_ )
+    {
+	ioService_.run();
+	// If the service returns there's no work to do so check for timeouts
+	CheckConnection();
+	// Reset service flags so that it can be run again
+	ioService_.reset();
+	// Wait for work to do, use timeout to check for reconnects
+	workAvailable_.timed_wait(lock,
+				boost::posix_time::seconds(RECONNECT_TIMEOUT));
+    }
+    std::cout<<"Connection thread "<<boost::this_thread::get_id()
+	     <<" ending"<<std::endl;
+}
+
+void Connection::CheckConnection()
+{
+    try
+    {
+	if ( IsConnected() && IsTimedOut() )
+	{
+	    std::clog<<"Attempting to reconnect"<<std::endl;
+	    Reconnect();
+	}
+    }
+    catch ( Exception& )
+    {
     }
 }

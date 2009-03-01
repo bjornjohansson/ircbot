@@ -1,7 +1,7 @@
 
 #include "server.hpp"
 #include "message.hpp"
-#include "../connection/connectionmanager.hpp"
+//#include "../connection/connectionmanager.hpp"
 #include "../exception.hpp"
 
 #include <iostream>
@@ -36,24 +36,22 @@ Server::Server(const std::string& id,
       nick_(nick),
       appendingChannelNicks_(false)
 {
-    ConnectionManager& manager = ConnectionManager::Instance();
-
-    connection_ = manager.Connect(host, port);
     RegisterSelfAsReceiver();
-
-    if ( connection_ && connection_->IsConnected() )
-    {
-	ChangeNick(nick_);
-	SendUserString(nick_, nick_);
-    }
-
+    connection_.Connect(host, port);
 }
-
+/*
 Server::Server(const Server& rhs)
 {
     *this = rhs;
 }
+*/
+Server::~Server()
+{
+    // Do not detroy this class while it's performing callbacks
+    boost::lock_guard<boost::mutex> lock(callbackMutex_);
+}
 
+/*
 Server& Server::operator=(const Server& rhs)
 {
     receivers_ = rhs.receivers_;
@@ -70,7 +68,7 @@ Server& Server::operator=(const Server& rhs)
     RegisterSelfAsReceiver();
     return *this;
 }
-
+*/
 void Server::Send(const std::string& data)
 {
     std::vector<char> buffer;
@@ -79,7 +77,7 @@ void Server::Send(const std::string& data)
     buffer.push_back('\n');
     try
     {
-	connection_->Send(buffer);
+	connection_.Send(buffer);
     }
     catch ( Exception& e )
     {
@@ -92,6 +90,7 @@ void Server::Send(const std::string& data)
 
 void Server::Receive(Connection& connection, const std::vector<char>& data)
 {
+    boost::lock_guard<boost::mutex> lock(callbackMutex_);
     // Copy everything but '\r' as some irc servers don't comply
     std::remove_copy(data.begin(), data.end(),
 		     std::back_inserter(receiveBuffer_), '\r');
@@ -160,7 +159,7 @@ void Server::JoinChannel(const std::string& channel, const std::string& key)
 {
     boost::upgrade_lock<boost::shared_mutex> lock(channelsMutex_);
     channels_[channel] = key;
-    if ( connection_ && connection_->IsConnected() )
+    if ( connection_.IsConnected() )
     {
 	if ( key.size() > 0 )
 	{
@@ -362,6 +361,7 @@ void Server::OnText(const std::string& text)
 	else
 	{
 	    // If a receiver is no longer valid we remove it
+	    boost::upgrade_lock<boost::shared_mutex> lock(receiversMutex_);
 	    i = receivers_.erase(i);
 	}
     }
@@ -370,9 +370,9 @@ void Server::OnText(const std::string& text)
 
 void Server::RegisterSelfAsReceiver()
 {
-    connectionReceiver_ = connection_->RegisterReceiver(
+    connectionReceiver_ = connection_.RegisterReceiver(
 	boost::bind(&Server::Receive, this, _1, _2));
-    onConnectCallback_ = connection_->RegisterOnConnectCallback(
+    onConnectCallback_ = connection_.RegisterOnConnectCallback(
 	boost::bind(&Server::OnConnect, this, _1));
 }
 

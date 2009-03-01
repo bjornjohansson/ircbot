@@ -1,7 +1,7 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include "socket.hpp"
+#include "../thread_safe.hpp"
 
 #include <string>
 #include <vector>
@@ -12,35 +12,33 @@
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
-
-class ConnectionManager;
+#include <boost/utility.hpp>
 
 const std::size_t RECEIVE_BUFFER_SIZE = 1024;
 
-class Connection
+class Connection : boost::noncopyable
 {
-private:
+public:
+    Connection();
     /**
-     * This is private because we don't want anyone to create connections.
-     * Only ConnectionManager should be doing that.
      * @throw Exception if unable to connect
      */
-    Connection(boost::asio::io_service& service,
-	       const std::string& host,
-	       const unsigned short port);
+    Connection(const std::string& host, const unsigned short port);
+    virtual ~Connection();
 
-public:
-    typedef boost::function<void (Connection&, 
-				  const std::vector<char>&)> Receiver;
-    typedef boost::shared_ptr<Receiver> ReceiverHandle;
-    typedef boost::function<void (Connection&)> OnConnectCallback;
-    typedef boost::shared_ptr<OnConnectCallback> OnConnectHandle;
+    /**
+     * @throw Exception if unable to connect
+     */
+    void Connect(const std::string& host, const unsigned short port);
 
     /**
      * @throw Exception if unable to reconnect
      */
     void Reconnect();
 
+    typedef boost::function<void (Connection&, 
+				  const std::vector<char>&)> Receiver;
+    typedef boost::shared_ptr<Receiver> ReceiverHandle;
     /**
      * Register a function as a receiver, the return value is a handle
      * to the receiver, whenever this handle ceases to exist the connection
@@ -49,20 +47,21 @@ public:
     ReceiverHandle RegisterReceiver(Receiver r);
     void Send(const std::vector<char>& data);
 
-    OnConnectHandle RegisterOnConnectCallback(OnConnectCallback c);
+    typedef boost::function<void (Connection&)> OnConnectCallback;
+    typedef boost::shared_ptr<OnConnectCallback> OnConnectHandle;
 
     /**
-     * @throw Exception if there's not valid socket
+     * Register a function as a callback for OnConnect events.
+     * The return value is a handle to the callback, whenever this handle
+     * ceases to exist the connection will no longer notify the callback
+     * of OnConnect events.
      */
-//    int GetSocket() const;
+    OnConnectHandle RegisterOnConnectCallback(OnConnectCallback c);
 
     bool IsTimedOut() const;
     bool IsConnected() const;
 
 private:
-
-    void Connect();
-
     void OnConnect(const boost::system::error_code& error,
 		   boost::asio::ip::tcp::resolver::iterator endpointIt);
 
@@ -70,24 +69,31 @@ private:
     void Receive(const boost::system::error_code& error,
 		 const std::size_t& bytes);
 
-    friend class ConnectionManager;
+    void Loop();
+    void CheckConnection();
 
-    boost::asio::io_service& ioService_;
+    boost::asio::io_service ioService_;
     boost::asio::ip::tcp::socket socket_;
+    boost::mutex socketMutex_;
     boost::array<char, RECEIVE_BUFFER_SIZE> buffer_;
 
     std::string host_;
     unsigned short port_;
     typedef std::list<boost::weak_ptr<Receiver> > ReceiverContainer;
     ReceiverContainer receivers_;
+    boost::shared_mutex receiversMutex_;
     typedef boost::weak_ptr<OnConnectCallback> OnConnectCallbackPtr;
     typedef std::list<OnConnectCallbackPtr> OnConnectCallbackContainer;
     OnConnectCallbackContainer onConnectCallbacks_;
     boost::shared_mutex callbacksMutex_;
     time_t lastReception_;
-    bool connected_;
+    thread_safe<bool> connected_;
     boost::mutex sendMutex_;
-    mutable boost::shared_mutex connectedMutex_;
+    std::auto_ptr<boost::thread> thread_;
+
+    bool run_;
+    boost::condition_variable workAvailable_;
+    boost::mutex workAvailableMutex_;
 };
 
 #endif
