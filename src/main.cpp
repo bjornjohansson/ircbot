@@ -1,6 +1,5 @@
 #include "client.hpp"
 #include "exception.hpp"
-#include "connection/connectionmanager.hpp"
 
 #include <string>
 #include <vector>
