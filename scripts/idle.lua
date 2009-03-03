@@ -1,8 +1,8 @@
 
 local function idle(server, fromNick, fromUser, fromHost, to, message)
    local pos, length, nick = string.find(message, "!idle ([^ ]*)")
-   if pos == 1 and string.find(to, "#") == 1 and nick then
-      local line, secondsAgo = GetLastLine(server, to, nick)
+   if pos == 1 and string.find(to, "[#&]") == 1 and nick then
+      local line, secondsAgo = GetLastLine(nick, to, server)
       if line then
 	 return nick.." has been idle for "
 	    ..FormatTimeDiff(secondsAgo)..". Last thing he said was \""

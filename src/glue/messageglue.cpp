@@ -75,6 +75,12 @@ private:
 
     Client::MessageEventReceiverHandle messageHandle_;
     int recursions_;
+
+    std::string lastServer_;
+    std::string lastFromNick_;
+    std::string lastFromUser_;
+    std::string lastFromHost_;
+    std::string lastTo_;
 };
 
 MessageGlue messageGlue;
@@ -114,17 +120,23 @@ void MessageGlue::Reset(boost::shared_ptr<Lua> lua,
 
 int MessageGlue::Send(lua_State* lua)
 {
-    CheckArgument(lua, 1, LUA_TSTRING);
-    CheckArgument(lua, 2, LUA_TSTRING);
-    CheckArgument(lua, 3, LUA_TSTRING);
-
-    std::string server = lua_tostring(lua, 1);
-    std::string target = lua_tostring(lua, 2);
-    std::string message= lua_tostring(lua, 3);
-
     try
     {
-	client_->SendMessage(server, target, message);
+	std::string server, target, message;
+	int argumentCount = lua_gettop(lua);
+	CheckArgument(lua, 1, LUA_TSTRING);
+	message= lua_tostring(lua, 1);
+	if ( argumentCount >= 2 )
+	{
+	    CheckArgument(lua, 2, LUA_TSTRING);
+	    target = lua_tostring(lua, 2);
+	    if ( argumentCount >= 3 )
+	    {
+		CheckArgument(lua, 3, LUA_TSTRING);
+		server = lua_tostring(lua, 3);
+	    }
+	}
+	client_->SendMessage(message, target, server);
     }
     catch ( Exception& e)
     {
@@ -143,19 +155,41 @@ int MessageGlue::RecurseMessage(lua_State* lua)
 	return 1;
     }
 
-    CheckArgument(lua, 1, LUA_TSTRING);
-    CheckArgument(lua, 2, LUA_TSTRING);
-    CheckArgument(lua, 3, LUA_TSTRING);
-    CheckArgument(lua, 4, LUA_TSTRING);
-    CheckArgument(lua, 5, LUA_TSTRING);
-    CheckArgument(lua, 6, LUA_TSTRING);
+    std::string server = lastServer_;
+    std::string fromNick = lastFromNick_;
+    std::string fromUser = lastFromUser_;
+    std::string fromHost = lastFromHost_;
+    std::string to = lastTo_;
+    std::string message;
 
-    std::string server = lua_tostring(lua, 1);
-    std::string fromNick = lua_tostring(lua, 2);
-    std::string fromUser = lua_tostring(lua, 3);
-    std::string fromHost = lua_tostring(lua, 4);
-    std::string to = lua_tostring(lua, 5);
-    std::string message = lua_tostring(lua, 6);
+    int argumentCount = lua_gettop(lua);
+    CheckArgument(lua, 1, LUA_TSTRING);
+    message = lua_tostring(lua, 1);
+    if ( argumentCount >= 2 )
+    {
+	CheckArgument(lua, 2, LUA_TSTRING);
+	to = lua_tostring(lua, 2);
+	if ( argumentCount >= 3 )
+	{
+	    CheckArgument(lua, 3, LUA_TSTRING);
+	    fromNick = lua_tostring(lua, 3);
+	    if ( argumentCount >= 4 )
+	    {
+		CheckArgument(lua, 4, LUA_TSTRING);
+		fromUser = lua_tostring(lua, 4);
+		if ( argumentCount >= 5 )
+		{
+		    CheckArgument(lua, 5, LUA_TSTRING);
+		    fromHost = lua_tostring(lua, 5);
+		    if ( argumentCount >= 6 )
+		    {
+			CheckArgument(lua, 6, LUA_TSTRING);
+			server = lua_tostring(lua, 6);
+		    }
+		}
+	    }
+	}
+    }
 
     lua_pop(lua, lua_gettop(lua));
 
@@ -247,6 +281,12 @@ void MessageGlue::OnMessageEvent(const std::string& server,
     const std::string& fromUser = from.GetUser();
     const std::string& fromHost = from.GetHost();
 
+    lastServer_ = server;
+    lastFromNick_ = fromNick;
+    lastFromUser_ = fromUser;
+    lastFromHost_ = fromHost;
+    lastTo_ = to;
+
     // If the message was sent to a channel we reply to that channel.
     // If it was sent directly to us we reply to the sender
     std::string replyTo = fromNick;
@@ -279,17 +319,17 @@ void MessageGlue::OnMessageEvent(const std::string& server,
 		}
 		// Send the limited string, remove it from the line
 		// and increase the line count
-		client_->SendMessage(server, replyTo, msg.substr(0, pos));
+		client_->SendMessage(msg.substr(0, pos), replyTo, server);
 		msg.erase(0, pos+1);
 		++lineCount;
 	    }
 
 	    if ( lineCount >= MAX_SEND_LINES )
 	    {
-		client_->SendMessage(server, replyTo, "Too many lines.");
+		client_->SendMessage("Too many lines.", replyTo, server);
 		break;
 	    }
-	    client_->SendMessage(server, replyTo, msg);
+	    client_->SendMessage(msg, replyTo, server);
 	    ++lineCount;
 	}
     }

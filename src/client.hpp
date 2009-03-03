@@ -21,44 +21,44 @@ public:
     /**
      * @throw Exception if no matching server found
      */
-    void JoinChannel(const std::string& serverId,
-		     const std::string& channel,
-		     const std::string& key);
+    void JoinChannel(const std::string& channel,
+		     const std::string& key = std::string(),
+		     const std::string& serverId = std::string());
     /**
      * @throw Exception if no matching server found
      */
-    void ChangeNick(const std::string& serverId,
-		    const std::string& nick);
+    void ChangeNick(const std::string& nick,
+		    const std::string& serverId = std::string());
     /**
      * @throw Exception if no matching server found
      */
-    void SendMessage(const std::string& serverId,
-		     const std::string& target,
-		     const std::string& message);
+    void SendMessage(const std::string& message,
+		     const std::string& target = std::string(),
+		     const std::string& serverId = std::string());
 
     /**
      * @throw Exception if no matching server found
      */
-    std::string GetLogName(const std::string& serverId,
-			   const std::string& target) const;
+    std::string GetLogName(const std::string& target = std::string(),
+			   const std::string& serverId = std::string()) const;
     /**
      * @throw Exception if no matching server found
      * @param timestamp becomes -1 if no last line can be found
      */
-    std::string GetLastLine(const std::string& serverId,
-			    const std::string& channel,
-			    const std::string& nick,
-			    long& timestamp) const;
+    std::string GetLastLine(const std::string& nick,
+			    long& timestamp,
+			    const std::string& channel = std::string(),
+			    const std::string& serverId = std::string()) const;
     /**
      * @throw Exception if no matching server found
      */
-    const std::string& GetNick(const std::string& serverId);
+    const std::string& GetNick(const std::string& serverId = std::string());
 
     /**
      * @throw Exception if no matching server or channel found
      */
-    const Server::NickContainer& GetChannelNicks(const std::string& serverId,
-						 const std::string& channel);
+    const Server::NickContainer& GetChannelNicks(const std::string& channel = std::string(),
+						 const std::string& serverid = std::string());
 
     typedef boost::function<void (const std::string&, //server
 				  const Irc::Prefix&, //from
@@ -122,4 +122,7 @@ private:
     boost::shared_ptr<Lua> lua_;
     boost::mutex runMutex_;
     boost::condition_variable runCondition_;
+
+    std::string currentServer_;
+    std::string currentReplyTo_;
 };

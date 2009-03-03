@@ -218,7 +218,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
    
 
    if string.find(reply, "\\N") or 0 > 0 then
-      local nicks = GetChannelNicks(RegExp_Server, RegExp_Channel)
+      local nicks = GetChannelNicks(RegExp_Channel, RegExp_Server)
       reply = string.gsub(reply, "\\N", table.concat(nicks, "|"))
    end
 
@@ -236,7 +236,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
 
    reply = string.gsub(reply, "\\b", GetMyNick(RegExp_Server))
    reply = string.gsub(reply, "\\s", RegExp_Channel)
-   local logname = string.gsub(GetLogName(RegExp_Server, RegExp_Channel),
+   local logname = string.gsub(GetLogName(RegExp_Channel, RegExp_Server),
 			       "#", "\\#")
    reply = string.gsub(reply, "\\l", logname)
    reply = string.gsub(reply, "\\c", "\1")
@@ -259,9 +259,9 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
       if pos > 1 then
 	 prefix = string.sub(reply, 1, pos-1)
       end
-      reply = prefix..RecurseMessage(RegExp_Server, RegExp_FromNick,
-				     RegExp_FromUser, RegExp_FromHost,
-				     RegExp_To, string.sub(reply, pos+2))
+      reply = prefix..RecurseMessage(string.sub(reply, pos+2), RegExp_To,
+                                     RegExp_FromNick, RegExp_FromUser,
+                                     RegExp_FromHost, RegExp_Server)
    end
 
    return reply

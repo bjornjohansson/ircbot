@@ -62,6 +62,9 @@ void Client::Run()
 
 void Client::Receive(Server& server, const Irc::Message& message)
 {
+    currentServer_ = server.GetId();
+    currentReplyTo_.clear();
+
     if ( message.GetCommand() == "PING" )
     {
 	server.Send("PONG "+server.GetHostName());
@@ -72,24 +75,25 @@ void Client::Receive(Server& server, const Irc::Message& message)
     }
 }
 
-void Client::JoinChannel(const std::string& serverId,
-			 const std::string& channel,
-			 const std::string& key)
+void Client::JoinChannel(const std::string& channel,
+			 const std::string& key,
+			 const std::string& serverId)
 {
     GetServerFromId(serverId).JoinChannel(channel, key);
 }
  
-void Client::ChangeNick(const std::string& serverId,
-			const std::string& nick)
+void Client::ChangeNick(const std::string& nick,
+			const std::string& serverId)
 {
     GetServerFromId(serverId).ChangeNick(nick);
 }
 
-void Client::SendMessage(const std::string& serverId,
+void Client::SendMessage(const std::string& message,
 			 const std::string& target,
-			 const std::string& message)
+			 const std::string& serverId)
 {
-    GetServerFromId(serverId).SendMessage(target, message);
+    const std::string& to = target.empty() ? currentReplyTo_ : target;
+    GetServerFromId(serverId).SendMessage(to, message);
 }
 
 Client::MessageEventReceiverHandle Client::RegisterForMessages(
@@ -106,18 +110,20 @@ const Config& Client::GetConfig() const
     return config_;
 }
 
-std::string Client::GetLogName(const std::string& serverId,
-			       const std::string& target) const
+std::string Client::GetLogName(const std::string& target,
+			       const std::string& serverId) const
 {
-    return GetServerFromId(serverId).GetLogName(target);
+    const std::string& to = target.empty() ? currentReplyTo_ : target;
+    return GetServerFromId(serverId).GetLogName(to);
 }
 
-std::string Client::GetLastLine(const std::string& serverId,
+std::string Client::GetLastLine(const std::string& nick,
+				long& timestamp,
 				const std::string& channel,
-				const std::string& nick,
-				long& timestamp) const
+				const std::string& serverId) const
 {
-    std::string logName = GetServerFromId(serverId).GetLogName(channel);
+    const std::string& to = channel.empty() ? currentReplyTo_ : channel;
+    std::string logName = GetServerFromId(serverId).GetLogName(to);
 
     std::vector<char> buffer(1024,0);
 
@@ -143,10 +149,11 @@ const std::string& Client::GetNick(const std::string& serverId)
 }
 
 const Server::NickContainer&
-Client::GetChannelNicks(const std::string& serverId,
-			const std::string& channel)
+Client::GetChannelNicks(const std::string& channel,
+			const std::string& serverId)
 {
-    return GetServerFromId(serverId).GetChannelNicks(channel);
+    const std::string& to = channel.empty() ? currentReplyTo_ : channel;
+    return GetServerFromId(serverId).GetChannelNicks(to);
 }
 
 Server& Client::GetServerFromId(const std::string& id)
@@ -165,8 +172,10 @@ Server& Client::GetServerFromId(const std::string& id)
 
 const Server& Client::GetServerFromId(const std::string& id) const
 {
+    const std::string& serverId = id.empty() ? currentReplyTo_ : id;
+
     boost::shared_lock<boost::shared_mutex> lock(serverMutex_);
-    ServerHandleMap::const_iterator server = servers_.find(id);
+    ServerHandleMap::const_iterator server = servers_.find(serverId);
     if ( server != servers_.end() )
     {
 	return *server->second.first;
@@ -217,6 +226,12 @@ void Client::OnPrivMsg(Server& server, const Irc::Message& message)
     const std::string& fromNick = message.GetPrefix().GetNick();
     const std::string& to = message[0];
     const std::string& text = message[1];
+
+    currentReplyTo_ = to;
+    if ( currentReplyTo_.find_first_of("#&") != 0 )
+    {
+	currentReplyTo_ = fromNick;
+    }
 
     if ( text == (server.GetNick()+": reload") ||
 	 (to == server.GetNick() && text == "reload") )

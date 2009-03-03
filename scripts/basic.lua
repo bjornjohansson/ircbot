@@ -54,7 +54,7 @@ function JoinChannelCall(server, fromNick, fromUser, fromHost, to, message)
    local command, channel, key = select(3,
 					string.find(message,
 						    "([^ ]+) ([^ ]+) ?(.*)"))
-   Join(server, channel, key)
+   Join(channel, key, server)
 end
 
 RegisterBlockingCall("^join .+", JoinChannelCall, true)

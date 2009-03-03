@@ -41,25 +41,24 @@ void ChannelGlue::AddFunctions()
 
 int ChannelGlue::JoinChannel(lua_State* lua)
 {
-    int argumentCount = lua_gettop(lua);
-    CheckArgument(lua, 1, LUA_TSTRING);
-    CheckArgument(lua, 2, LUA_TSTRING);
-    if ( argumentCount >= 3 )
-    {
-	CheckArgument(lua, 3, LUA_TSTRING);
-    }
-
-    std::string server = lua_tostring(lua, 1);
-    std::string channel = lua_tostring(lua, 2);
-    std::string key;
-    if ( argumentCount == 3 )
-    {
-	key = lua_tostring(lua, 3);
-    }
-
     try
     {
-	client_->JoinChannel(server, channel, key);
+	std::string server, channel, key;
+	int argumentCount = lua_gettop(lua);
+	CheckArgument(lua, 1, LUA_TSTRING);
+	channel = lua_tostring(lua, 1);
+	if ( argumentCount >= 2 )
+	{
+	    CheckArgument(lua, 2, LUA_TSTRING);
+	    key = lua_tostring(lua, 2);
+	    if ( argumentCount >= 3 )
+	    {
+		CheckArgument(lua, 3, LUA_TSTRING);
+		server = lua_tostring(lua, 3);
+	    }
+	}
+	
+	client_->JoinChannel(channel, key, server);
     }
     catch ( Exception& e)
     {
@@ -71,14 +70,21 @@ int ChannelGlue::JoinChannel(lua_State* lua)
 
 int ChannelGlue::GetChannelNicks(lua_State* lua)
 {
-    CheckArgument(lua, 1, LUA_TSTRING);
-    CheckArgument(lua, 2, LUA_TSTRING);
+    std::string server, channel;
+    int argumentCount = lua_gettop(lua);
+    if ( argumentCount >= 1 )
+    {
+	CheckArgument(lua, 1, LUA_TSTRING);
+	channel = lua_tostring(lua, 1);
+	if ( argumentCount >= 2 )
+	{
+	    CheckArgument(lua, 2, LUA_TSTRING);
+	    server = lua_tostring(lua, 2);
+	}
+    }
 
-    std::string server = lua_tostring(lua, 1);
-    std::string channel = lua_tostring(lua, 2);
-
-    const Server::NickContainer& nicks = client_->GetChannelNicks(server,
-								  channel);
+    const Server::NickContainer& nicks = client_->GetChannelNicks(channel,
+								  server);
 
     int count = std::distance(nicks.begin(), nicks.end());
 

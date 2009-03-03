@@ -219,9 +219,9 @@ void ReminderManager::Timer()
 		{
 		    try
 		    {
-			reminderCallback_(reminder->Server,
+			reminderCallback_(reminder->Message,
 					  reminder->Channel,
-					  reminder->Message);
+					  reminder->Server);
 		    }
 		    catch ( ... )
 		    {

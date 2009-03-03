@@ -33,13 +33,20 @@ void LogGlue::AddFunctions()
 
 int LogGlue::GetLogName(lua_State* lua)
 {
-    CheckArgument(lua, 1, LUA_TSTRING);
-    CheckArgument(lua, 2, LUA_TSTRING);
+    std::string server, target;
+    int argumentCount = lua_gettop(lua);
+    if ( argumentCount >= 1 )
+    {
+	CheckArgument(lua, 1, LUA_TSTRING);
+	target = lua_tostring(lua, 1);
+	if ( argumentCount >= 2 )
+	{
+	    CheckArgument(lua, 2, LUA_TSTRING);
+	    server = lua_tostring(lua, 2);
+	}
+    }
 
-    const char* server = lua_tostring(lua, 1);
-    const char* target = lua_tostring(lua, 2);
-
-    std::string logName = client_->GetLogName(server, target);
+    std::string logName = client_->GetLogName(target, server);
 
     lua_pushstring(lua, logName.c_str());
     return 1;
@@ -47,19 +54,27 @@ int LogGlue::GetLogName(lua_State* lua)
 
 int LogGlue::GetLastLine(lua_State* lua)
 {
+    std::string server, target, nick;
+    int argumentCount = lua_gettop(lua);
     CheckArgument(lua, 1, LUA_TSTRING);
-    CheckArgument(lua, 2, LUA_TSTRING);
-    CheckArgument(lua, 3, LUA_TSTRING);
-
-    const char* server = lua_tostring(lua, 1);
-    const char* target = lua_tostring(lua, 2);
-    const char* nick = lua_tostring(lua, 3);
-
+    nick = lua_tostring(lua, 1);
+    if ( argumentCount >= 2 )
+    {
+	CheckArgument(lua, 2, LUA_TSTRING);
+	target = lua_tostring(lua, 2);
+	if ( argumentCount >= 3 )
+	{
+	    CheckArgument(lua, 3, LUA_TSTRING);
+	    server = lua_tostring(lua, 3);
+	}
+    }
+    
     long timestamp = -1;
     std::string logLine;
+
     try
     {
-	logLine = client_->GetLastLine(server, target, nick, timestamp);
+	logLine = client_->GetLastLine(nick, timestamp, target, server);
     }
     catch ( Exception& )
     {

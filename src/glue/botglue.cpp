@@ -30,9 +30,12 @@ void BotGlue::AddFunctions()
 
 int BotGlue::GetMyNick(lua_State* lua)
 {
-    CheckArgument(lua, 1, LUA_TSTRING);
-
-    const char* server = lua_tostring(lua, 1);
+    std::string server;
+    if ( lua_gettop(lua) >= 1 )
+    {
+	CheckArgument(lua, 1, LUA_TSTRING);
+	server = lua_tostring(lua, 1);
+    }
 
     std::string nick = client_->GetNick(server);
 
