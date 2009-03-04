@@ -61,7 +61,15 @@ void NamedPipe::ReceiveLine(const std::string& line)
 	    ss>>server>>channel;
 	    while ( ss.peek() == ' ' ) { ss.get(); }
 	    std::getline(ss, message);
-	    (*receiver)(server, channel, message);
+	    try
+	    {
+		(*receiver)(server, channel, message);
+	    }
+	    catch ( Exception& e )
+	    {
+		std::cerr<<"Named pipe callback failed: "<<e.GetMessage()
+			 <<std::endl;
+	    }
 	    ++i;
 	}
 	else
