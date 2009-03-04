@@ -68,8 +68,7 @@ void NamedPipe::ReceiveLine(const std::string& line)
 	    catch ( Exception& e )
 	    {
 		std::cerr<<"Named pipe callback failed: "<<e.GetMessage()
-			 <<"server: "<<server<<", channel: "<<channel
-			 <<"message: "<<message<<std::endl;
+			 <<std::endl;
 	    }
 	    ++i;
 	}
@@ -79,7 +78,4 @@ void NamedPipe::ReceiveLine(const std::string& line)
 	    i = receivers_.erase(i);
 	}
     }
-
-    std::clog<<"Received '"<<line<<"'"<<std::endl;
-
 }
