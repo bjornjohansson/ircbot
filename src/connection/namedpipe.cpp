@@ -63,12 +63,13 @@ void NamedPipe::ReceiveLine(const std::string& line)
 	    std::getline(ss, message);
 	    try
 	    {
-		(*receiver)(server, channel, message);
+		(*receiver)(message, channel, server);
 	    }
 	    catch ( Exception& e )
 	    {
 		std::cerr<<"Named pipe callback failed: "<<e.GetMessage()
-			 <<std::endl;
+			 <<"server: "<<server<<", channel: "<<channel
+			 <<"message: "<<message<<std::endl;
 	    }
 	    ++i;
 	}
