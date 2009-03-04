@@ -51,6 +51,17 @@ Client::Client(const std::string& config)
     {
 	std::clog<<e.GetMessage()<<std::endl;
     }
+
+    try
+    {
+	namedPipe_.reset(new NamedPipe(config_.GetNamedPipeName()));
+	pipeReceiver_ = namedPipe_->RegisterReceiver(
+	    boost::bind(&Client::SendMessage, this, _1, _2, _3));
+    }
+    catch ( Exception& )
+    {
+	std::cerr<<"Could not open named pipe"<<std::endl;
+    }
 }
 
 void Client::Run()

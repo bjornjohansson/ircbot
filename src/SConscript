@@ -1,6 +1,7 @@
 sourceFiles = ['client.cpp'
               ,'config.cpp'
               ,'connection/connection.cpp'
+	      ,'connection/namedpipe.cpp'
               ,'error.cpp'
               ,'exception.cpp'
 	      ,'forkcommand.cpp'

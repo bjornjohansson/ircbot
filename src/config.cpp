@@ -61,6 +61,10 @@ void Config::ParseGeneral(xmlNode* node)
 	{
 	    remindersFilename_ = GetXmlNodeTextContent(child);
 	}
+	else if ( std::string("namedpipe") == child->name )
+	{
+	    namedPipeName_ = GetXmlNodeTextContent(child);
+	}
     }
 }
 

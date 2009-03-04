@@ -3,6 +3,7 @@
 #include "irc/server.hpp"
 #include "config.hpp"
 #include "lua/lua.hpp"
+#include "connection/namedpipe.hpp"
 
 #include <string>
 #include <map>
@@ -122,6 +123,9 @@ private:
     boost::shared_ptr<Lua> lua_;
     boost::mutex runMutex_;
     boost::condition_variable runCondition_;
+
+    boost::shared_ptr<NamedPipe> namedPipe_;
+    NamedPipe::ReceiverHandle pipeReceiver_;
 
     std::string currentServer_;
     std::string currentReplyTo_;
