@@ -12,6 +12,8 @@
 #include <boost/weak_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/bind.hpp>
+#include <boost/algorithm/string/regex.hpp>
+#include <boost/regex.hpp>
 
 const time_t CONNECTION_TIMEOUT_SECONDS = 300;
 // Number of seconds before attempting a new reconnect
@@ -43,15 +45,23 @@ Connection::~Connection()
 {
     {
 	boost::lock_guard<boost::mutex> lock(socketMutex_);
-	socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-	socket_.close();
+	boost::system::error_code error;
+	socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
+	socket_.close(error);
     }
     {
 	boost::unique_lock<boost::mutex> lock(workAvailableMutex_);
 	run_ = false;
 	workAvailable_.notify_all();
+	// Release lock so that the loop thread actually leaves the wait
+	// condition.
     }
-    thread_->join();
+    {
+	// Reacquire lock to make sure that the thread is finished.
+	// For some reason joining the thread is not always enough
+	boost::unique_lock<boost::mutex> lock(workAvailableMutex_);
+	thread_->join();
+    }
 }
 
 void Connection::Connect(const std::string& host, const unsigned short port)
@@ -65,12 +75,16 @@ void Connection::Connect(const std::string& host, const unsigned short port)
 	socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
 	socket_.close(error);
 
-	std::clog<<"Connecting to "<<host_<<":"<<port_<<"..."<<std::endl;
+	// Convert port number to string and remove all non-digits from the
+	// string. Certain locales will insert non-digits in numeric strings
+	std::string portString = boost::erase_all_regex_copy(
+	    boost::lexical_cast<std::string>(port_),
+	    boost::regex("[^[:digit:]]"));
+	std::clog<<"Connecting to "<<host_<<":"<<portString<<"..."<<std::endl;
 	// Create a resolver and a query for the supplied host and port
 	using namespace boost::asio::ip;
 	tcp::resolver resolver(ioService_);
-	tcp::resolver::query query(host_,
-				   boost::lexical_cast<std::string>(port_));
+	tcp::resolver::query query(host_, portString);
 
 	tcp::resolver::iterator endpointIt = resolver.resolve(query);
 	tcp::endpoint endpoint = *endpointIt;
@@ -84,7 +98,7 @@ void Connection::Connect(const std::string& host, const unsigned short port)
     {
 	throw Exception(__FILE__, __LINE__, e.what());
     }
-    catch ( boost::system::system_error& e )
+    catch ( std::exception& e )
     {
 	throw Exception(__FILE__, __LINE__, e.what());
     }
