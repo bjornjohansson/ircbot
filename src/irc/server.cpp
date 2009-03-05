@@ -242,11 +242,12 @@ void Server::OnText(const std::string& text)
     {
 	const std::string& from = message.GetPrefix().GetNick();
 	const std::string& to = message[0];
+	const std::string& replyTo = to.find_first_of("#&") == 0 ? to : from;
 	std::stringstream ss;
 	ss.imbue(std::locale("C"));
-	ss<<time(0)<<" "<<to<<": <"<<from<<"> "
+	ss<<time(0)<<" "<<replyTo<<": <"<<from<<"> "
 	  <<CleanMessageForDisplay(from, message[1]);
-	Log(to == GetNick() ? from : to ,ss.str());
+	Log(replyTo, ss.str());
     }
     else if ( message.GetCommand() == "353" && message.size() >= 4)
     {
