@@ -92,6 +92,8 @@ private:
 
     void OnPrivMsg(Server& server, const Irc::Message& message);
 
+    void ReceivePipeMessage(const std::string& line);
+
     void Log(Server& server,
 	     const std::string& target,
 	     const std::string& text);

@@ -15,9 +15,7 @@ public:
      */
     explicit NamedPipe(const std::string& pipeName);
 
-    typedef boost::function<void (const std::string&,
-				  const std::string&,
-				  const std::string&)> Receiver;
+    typedef boost::function<void (const std::string&)> Receiver;
     typedef boost::shared_ptr<Receiver> ReceiverHandle;
     
     /**

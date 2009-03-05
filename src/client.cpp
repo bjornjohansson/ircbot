@@ -10,6 +10,7 @@
 #include <boost/bind.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/filesystem/exception.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <sys/utsname.h>
 
@@ -56,7 +57,7 @@ Client::Client(const std::string& config)
     {
 	namedPipe_.reset(new NamedPipe(config_.GetNamedPipeName()));
 	pipeReceiver_ = namedPipe_->RegisterReceiver(
-	    boost::bind(&Client::SendMessage, this, _1, _2, _3));
+	    boost::bind(&Client::ReceivePipeMessage, this, _1));
     }
     catch ( Exception& )
     {
@@ -262,6 +263,11 @@ void Client::OnPrivMsg(Server& server, const Irc::Message& message)
     }
     else
     {
+	if ( boost::iequals(server.GetNick(), fromNick) )
+	{
+	    // We do not process messages from ourself
+	    return;
+	}
 	std::string cleanedMessage = text;
 	const std::string ctcpAction = "\1ACTION";
 	if ( cleanedMessage.find(ctcpAction) == 0 )
@@ -284,6 +290,28 @@ void Client::OnPrivMsg(Server& server, const Irc::Message& message)
 		(*f)(server.GetId(), message.GetPrefix(), to, cleanedMessage);
 	    }
 	}
+    }
+}
+
+void Client::ReceivePipeMessage(const std::string& line)
+{
+    std::stringstream ss(line);
+    std::string command, server, channel, message;
+    ss>>command>>server>>channel;
+    if ( ss.peek() == ' ' ) { ss.get(); }
+    std::getline(ss, message);
+
+    try
+    {
+	if ( boost::iequals(command, "say") )
+	{
+	    SendMessage(message, channel, server);
+	}
+    }
+    catch ( Exception& e )
+    {
+	std::cout<<"Named pipe failed to send message: "<<e.GetMessage()
+		 <<std::endl;
     }
 }
 
