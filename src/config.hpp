@@ -52,6 +52,7 @@ public:
     const std::string& GetRegExpsFilename() const { return regExpsFilename_; }
     const std::string& GetRemindersFilename() const {return remindersFilename_;}
     const std::string& GetNamedPipeName() const { return namedPipeName_; }
+    const std::string& GetLocale() const { return locale_; }
 
 private:
     void ParseGeneral(xmlNode* node);
@@ -63,5 +64,6 @@ private:
     std::string regExpsFilename_;
     std::string remindersFilename_;
     std::string namedPipeName_;
+    std::string locale_;
     std::vector<Server> servers_;
 };

@@ -131,4 +131,5 @@ private:
 
     std::string currentServer_;
     std::string currentReplyTo_;
+    bool run_;
 };

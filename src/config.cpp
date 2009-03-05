@@ -65,6 +65,10 @@ void Config::ParseGeneral(xmlNode* node)
 	{
 	    namedPipeName_ = GetXmlNodeTextContent(child);
 	}
+	else if ( std::string("locale") == child->name )
+	{
+	    locale_ = GetXmlNodeTextContent(child);
+	}
     }
 }
 

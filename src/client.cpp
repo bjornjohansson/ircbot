@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <locale>
 
 #include <boost/bind.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -20,7 +21,19 @@ std::string VersionEnvironment = "Unknown";
 
 Client::Client(const std::string& config)
     : config_(config)
+    , run_(false)
 {
+    try
+    {
+	if ( !config_.GetLocale().empty() )
+	{
+	    std::locale::global(std::locale(config_.GetLocale().c_str()));
+	}
+    }
+    catch( ... )
+    {
+	std::cerr<<"Locale exception"<<std::endl;
+    }
     struct utsname name;
     if ( uname(&name) == 0 )
     {
@@ -47,6 +60,7 @@ Client::Client(const std::string& config)
 		server.JoinChannel(j->first, j->second);
 	    }
 	}
+	run_ = true;
     }
     catch ( Exception& e )
     {
@@ -67,9 +81,12 @@ Client::Client(const std::string& config)
 
 void Client::Run()
 {
-    boost::unique_lock<boost::mutex> lock(runMutex_);
+    if ( run_ )
+    {
+	boost::unique_lock<boost::mutex> lock(runMutex_);
     
-    runCondition_.wait(lock);
+	runCondition_.wait(lock);
+    }
 }
 
 void Client::Receive(Server& server, const Irc::Message& message)
