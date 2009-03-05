@@ -2,12 +2,15 @@
 
 NamedPipe::NamedPipe(const std::string& pipeName)
     : pipeFd_(open(pipeName.c_str(), O_RDWR))
-    , pipe_(ioService_, *pipeFd_)
+    , pipe_(ioService_)
 {
-    if ( *pipeFd_ < 0 )
+    boost::system::error_code error;
+    pipe_.assign(*pipeFd_, error);
+    if ( *pipeFd_ < 0 || error )
     {
 	throw Exception(__FILE__, __LINE__, "Could not open named pipe");
     }
+
     CreateReceiver();
     thread_.reset(new boost::thread(boost::bind(&boost::asio::io_service::run,
 						&ioService_)));
