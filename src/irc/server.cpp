@@ -202,6 +202,7 @@ void Server::SendMessage(const std::string& target, const std::string& message)
 	scrubbedMessage = CleanMessageForDisplay(GetNick(), scrubbedMessage);
 
 	std::stringstream ss;
+	ss.imbue(std::locale("C"));
 	ss<<time(0)<<" "<<target<<": <"<<GetNick()<<"> "<<scrubbedMessage;
 	Log(target ,ss.str());
     }
@@ -242,6 +243,7 @@ void Server::OnText(const std::string& text)
 	const std::string& from = message.GetPrefix().GetNick();
 	const std::string& to = message[0];
 	std::stringstream ss;
+	ss.imbue(std::locale("C"));
 	ss<<time(0)<<" "<<to<<": <"<<from<<"> "
 	  <<CleanMessageForDisplay(from, message[1]);
 	Log(to == GetNick() ? from : to ,ss.str());
