@@ -110,6 +110,15 @@ void Client::JoinChannel(const std::string& channel,
 {
     GetServerFromId(serverId).JoinChannel(channel, key);
 }
+
+void Client::Kick(const std::string& user,
+		  const std::string& message,
+		  const std::string& channel,
+		  const std::string& serverId)
+{
+    const std::string& chan = channel.empty() ? currentReplyTo_ : channel;
+    GetServerFromId(serverId).Kick(chan, user, message);
+}
  
 void Client::ChangeNick(const std::string& nick,
 			const std::string& serverId)
@@ -187,8 +196,10 @@ Client::GetChannelNicks(const std::string& channel,
 
 Server& Client::GetServerFromId(const std::string& id)
 {
+    const std::string& serverId = id.empty() ? currentServer_ : id;
+
     boost::shared_lock<boost::shared_mutex> lock(serverMutex_);
-    ServerHandleMap::iterator server = servers_.find(id);
+    ServerHandleMap::iterator server = servers_.find(serverId);
     if ( server != servers_.end() )
     {
 	return *server->second.first;
@@ -201,7 +212,7 @@ Server& Client::GetServerFromId(const std::string& id)
 
 const Server& Client::GetServerFromId(const std::string& id) const
 {
-    const std::string& serverId = id.empty() ? currentReplyTo_ : id;
+    const std::string& serverId = id.empty() ? currentServer_ : id;
 
     boost::shared_lock<boost::shared_mutex> lock(serverMutex_);
     ServerHandleMap::const_iterator server = servers_.find(serverId);

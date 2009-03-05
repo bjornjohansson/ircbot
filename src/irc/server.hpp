@@ -67,6 +67,9 @@ public:
     void ChangeNick(const std::string& nick);
     void SendUserString(const std::string& user, const std::string name);
     void SendMessage(const std::string& target, const std::string& message);
+    void Kick(const std::string& channel,
+	      const std::string& user,
+	      const std::string& message);
 
     typedef std::set<std::string> NickContainer;
     /**

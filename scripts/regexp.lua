@@ -170,7 +170,7 @@ function RegExp_RunCode(startblob, code, endblob)
    local reply = ""
    local f, error = loadstring(code)
    if f then
-      reply = tostring(f()) or ""
+      reply = tostring(f() or "") or ""
       local endline = string.find(reply, '\n')
       if endline then reply = string.sub(reply, 1, endline-1) end
       if reply == nil then return "" end
@@ -262,6 +262,11 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
       reply = prefix..RecurseMessage(string.sub(reply, pos+2), RegExp_To,
                                      RegExp_FromNick, RegExp_FromUser,
                                      RegExp_FromHost, RegExp_Server)
+   end
+
+   if reply:find("\\k") == 1 then
+      Kick(RegExp_FromNick, reply:sub(3))
+      return ""
    end
 
    return reply

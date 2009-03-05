@@ -18,6 +18,7 @@ public:
     ChannelGlue();
 
     int JoinChannel(lua_State* lua);
+    int Kick(lua_State* lua);
     int GetChannelNicks(lua_State* lua);
 private:   
     void AddFunctions();
@@ -34,6 +35,8 @@ void ChannelGlue::AddFunctions()
 {
     GlueManager::Instance().AddFunction(boost::bind(&ChannelGlue::JoinChannel,
 						    this, _1), "Join");
+    GlueManager::Instance().AddFunction(boost::bind(&ChannelGlue::Kick,
+						    this, _1), "Kick");
     GlueManager::Instance().AddFunction(boost::bind(
 					    &ChannelGlue::GetChannelNicks,
 					    this, _1), "GetChannelNicks");
@@ -67,6 +70,39 @@ int ChannelGlue::JoinChannel(lua_State* lua)
 
     return 0;
 }
+
+int ChannelGlue::Kick(lua_State* lua)
+{
+    try
+    {
+	std::string user, message, channel, server;
+	int argumentCount = lua_gettop(lua);
+	CheckArgument(lua, 1, LUA_TSTRING);
+	user = lua_tostring(lua, 1);
+	if ( argumentCount >= 2 )
+	{
+	    CheckArgument(lua, 2, LUA_TSTRING);
+	    message = lua_tostring(lua, 2);
+	    if ( argumentCount >= 3 )
+	    {
+		CheckArgument(lua, 3, LUA_TSTRING);
+		channel = lua_tostring(lua, 3);
+		if ( argumentCount >= 4 )
+		{
+		    CheckArgument(lua, 4, LUA_TSTRING);
+		    server = lua_tostring(lua, 4);
+		}
+	    }
+	}
+	client_->Kick(user, message, channel, server);
+    }
+    catch ( Exception& e )
+    {
+	return luaL_error(lua, e.GetMessage().c_str());
+    }
+    return 0;
+}
+
 
 int ChannelGlue::GetChannelNicks(lua_State* lua)
 {

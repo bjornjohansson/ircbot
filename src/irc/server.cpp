@@ -208,6 +208,15 @@ void Server::SendMessage(const std::string& target, const std::string& message)
     }
 }
 
+void Server::Kick(const std::string& channel,
+		  const std::string& user,
+		  const std::string& message)
+{
+    Send(std::string("KICK ")+channel+
+	 std::string(" ")+user+
+	 std::string(" :")+(message.empty() ? "" : message));
+}
+
 const Server::NickContainer&
 Server::GetChannelNicks(const std::string& channel) const
 {

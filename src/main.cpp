@@ -15,6 +15,9 @@ int main(int argc, char* argv[])
     }
 
     {
+	std::cout<<boost::thread::hardware_concurrency()
+		 <<" concurrent threads supported."<<std::endl;
+
         Client client(argv[1]);
 
 	std::cout<<"Running client"<<std::endl;

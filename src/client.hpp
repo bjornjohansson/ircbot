@@ -25,6 +25,12 @@ public:
     void JoinChannel(const std::string& channel,
 		     const std::string& key = std::string(),
 		     const std::string& serverId = std::string());
+
+    void Kick(const std::string& user,
+	      const std::string& message,
+	      const std::string& channel = std::string(),
+	      const std::string& server = std::string());
+
     /**
      * @throw Exception if no matching server found
      */
