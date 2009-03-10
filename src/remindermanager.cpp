@@ -26,6 +26,7 @@ ReminderManager::~ReminderManager()
 {
     runTimer_ = false;
     timerCondition_.notify_all();
+    timerThread_->join();
 }
 
 

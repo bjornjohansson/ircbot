@@ -16,6 +16,15 @@ NamedPipe::NamedPipe(const std::string& pipeName)
 						&ioService_)));
 }
 
+NamedPipe::~NamedPipe()
+{
+    pipe_.close();
+    if ( thread_.get() )
+    {
+	thread_->join();
+    }
+}
+
 NamedPipe::ReceiverHandle NamedPipe::RegisterReceiver(Receiver receiver)
 {
     ReceiverHandle handle(new Receiver(receiver));

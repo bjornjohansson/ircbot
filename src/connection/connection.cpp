@@ -53,13 +53,9 @@ Connection::~Connection()
 	boost::unique_lock<boost::mutex> lock(workAvailableMutex_);
 	run_ = false;
 	workAvailable_.notify_all();
-	// Release lock so that the loop thread actually leaves the wait
-	// condition.
-    }
-    {
-	// Reacquire lock to make sure that the thread is finished.
-	// For some reason joining the thread is not always enough
-	boost::unique_lock<boost::mutex> lock(workAvailableMutex_);
+	// Wait for the loop to signal that it's done and then join with that thread to make
+	// absolutely sure it finished in an orderly manner.
+	workAvailable_.wait(lock);
 	thread_->join();
     }
 }
@@ -268,6 +264,7 @@ void Connection::Loop()
 	workAvailable_.timed_wait(lock,
 				boost::posix_time::seconds(RECONNECT_TIMEOUT));
     }
+    workAvailable_.notify_all();
     std::cout<<"Connection thread "<<boost::this_thread::get_id()
 	     <<" ending"<<std::endl;
 }

@@ -14,6 +14,7 @@ public:
      * @throw Exception if pipe can not be opened
      */
     explicit NamedPipe(const std::string& pipeName);
+    ~NamedPipe();
 
     typedef boost::function<void (const std::string&)> Receiver;
     typedef boost::shared_ptr<Receiver> ReceiverHandle;
