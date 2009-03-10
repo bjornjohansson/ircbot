@@ -236,6 +236,7 @@ void ReminderManager::Timer()
 void ReminderManager::SaveReminders()
 {
     std::ofstream fout(remindersFile_.c_str());
+    fout.imbue(std::locale("C"));
 
     for(ReminderContainer::iterator reminder = reminders_.begin();
 	reminder != reminders_.end() && fout.good();
@@ -249,6 +250,7 @@ void ReminderManager::SaveReminders()
 void ReminderManager::ReadReminders()
 {
     std::ifstream fin(remindersFile_.c_str());
+    fin.imbue(std::locale("C"));
 
     while ( fin.good() )
     {
