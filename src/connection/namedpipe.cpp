@@ -31,8 +31,9 @@ void NamedPipe::OnReceive(const boost::system::error_code& error,
 	std::copy(buffer_.begin(), buffer_.begin()+bytes,
 		  std::back_inserter(data_));
 
-	std::string::size_type pos;
-	if ( (pos=data_.find('\n')) != std::string::npos )
+	for(std::string::size_type pos = data_.find('\n');
+	    pos != std::string::npos;
+	    pos = data_.find('\n'))
 	{
 	    std::string line = data_.substr(0, pos);
 	    data_.erase(0, pos+1);
