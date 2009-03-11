@@ -1,4 +1,5 @@
 #include "namedpipe.hpp"
+#include "../exception.hpp"
 
 NamedPipe::NamedPipe(const std::string& pipeName)
     : pipeFd_(open(pipeName.c_str(), O_RDWR))

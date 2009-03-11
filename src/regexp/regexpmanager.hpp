@@ -1,6 +1,6 @@
 #pragma once
 
-#include "regexp.hpp"
+#include "regexp.fwd.hpp"
 
 #include <string>
 #include <vector>

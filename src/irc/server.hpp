@@ -2,7 +2,7 @@
 #define SERVER_HPP
 
 #include "../connection/connection.hpp"
-#include "message.hpp"
+#include "message.fwd.hpp"
 
 #include <string>
 #include <vector>

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "irc/server.hpp"
+#include "irc/prefix.fwd.hpp"
 #include "config.hpp"
-#include "lua/lua.hpp"
+#include "lua/lua.fwd.hpp"
 #include "connection/namedpipe.hpp"
 
 #include <string>

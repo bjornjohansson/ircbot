@@ -1,4 +1,4 @@
-#include "../exception.hpp"
+#include "../exception.fwd.hpp"
 
 #include <list>
 

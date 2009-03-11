@@ -1,4 +1,6 @@
 #include "glue.hpp"
+#include "../lua/luafunction.hpp"
+#include "../regexp/regexp.hpp"
 
 #ifdef LUA_EXTERN
 extern "C" {

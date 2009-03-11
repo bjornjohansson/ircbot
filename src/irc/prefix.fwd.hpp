@@ -1,0 +1,4 @@
+namespace Irc
+{
+class Prefix;
+}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "luafunction.hpp"
+#include "luafunction.fwd.hpp"
 
 #include <string>
 #include <map>

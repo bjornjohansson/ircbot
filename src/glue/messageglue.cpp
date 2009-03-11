@@ -3,6 +3,7 @@
 #include "../client.hpp"
 #include "../exception.hpp"
 #include "../irc/prefix.hpp"
+#include "../lua/luafunction.hpp"
 
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/trim.hpp>

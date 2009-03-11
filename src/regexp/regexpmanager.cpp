@@ -1,4 +1,5 @@
 #include "regexpmanager.hpp"
+#include "regexp.hpp"
 #include "../exception.hpp"
 
 #include <fstream>

@@ -3,13 +3,21 @@
 #include <vector>
 #include <string>
 
-#include "glue.hpp"
+#include "glue.fwd.hpp"
 #include "../lua/lua.hpp"
-#include "../lua/luafunction.hpp"
-#include "../irc/prefix.hpp"
+#include "../lua/luafunction.fwd.hpp"
 
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
+
+#ifdef LUA_EXTERN
+extern "C"
+{
+#endif
+#include <lua.h>
+#ifdef LUA_EXTERN
+}
+#endif
 
 class Client;
 

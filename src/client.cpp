@@ -2,6 +2,7 @@
 #include "exception.hpp"
 #include "searchidle.h"
 #include "glue/gluemanager.hpp"
+#include "irc/message.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -84,7 +85,6 @@ void Client::Run()
     if ( run_ )
     {
 	boost::unique_lock<boost::mutex> lock(runMutex_);
-    
 	runCondition_.wait(lock);
     }
 }

@@ -1,4 +1,5 @@
 #include "gluemanager.hpp"
+#include "glue.hpp"
 
 #include <boost/bind.hpp>
 #include <algorithm>
