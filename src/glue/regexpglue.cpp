@@ -96,8 +96,9 @@ void RegexpGlue::Reset(boost::shared_ptr<Lua> lua,
 		       Client* client)
 {
     Glue::Reset(lua, client);
-    regExpManager_.reset(new RegExpManager(
-			     client_->GetConfig().GetRegExpsFilename()));
+    const Config& config = client_->GetConfig();
+    regExpManager_.reset(new RegExpManager(config.GetRegExpsFilename(),
+					   config.GetLocale()));
 }
 
 int RegexpGlue::AddRegExp(lua_State* lua)

@@ -11,12 +11,15 @@ const boost::regex::flag_type REGEX_FLAGS =
     boost::regex::extended|boost::regex::icase;
 const int MAX_SUB_MATCHES = 10;
 
-RegExp::RegExp(const std::string& regExp, const std::string& reply)
+RegExp::RegExp(const std::string& regExp,
+	       const std::string& reply,
+	       const std::locale& locale)
     : regExp_(regExp)
     , reply_(reply)
 {
     try
     {
+	pattern_.imbue(locale);
 	pattern_.assign(regExp, REGEX_FLAGS);
     }
     catch ( boost::regex_error& e )
@@ -78,21 +81,4 @@ const std::string& RegExp::GetReply() const
 void RegExp::SetReply(const std::string& reply)
 {
     reply_ = reply;
-}
-
-
-RegExp::RegExpPattern::RegExpPattern(regex_t pattern)
-    : pattern_(pattern)
-{
-
-}
-
-RegExp::RegExpPattern::~RegExpPattern()
-{
-    regfree(&pattern_);
-}
-
-const regex_t* RegExp::RegExpPattern::GetPattern() const
-{
-    return &pattern_;
 }

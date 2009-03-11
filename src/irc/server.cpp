@@ -202,7 +202,7 @@ void Server::SendMessage(const std::string& target, const std::string& message)
 	scrubbedMessage = CleanMessageForDisplay(GetNick(), scrubbedMessage);
 
 	std::stringstream ss;
-	ss.imbue(std::locale("C"));
+	ss.imbue(std::locale::classic());
 	ss<<time(0)<<" "<<target<<": <"<<GetNick()<<"> "<<scrubbedMessage;
 	Log(target ,ss.str());
     }
@@ -253,7 +253,7 @@ void Server::OnText(const std::string& text)
 	const std::string& to = message[0];
 	const std::string& replyTo = to.find_first_of("#&") == 0 ? to : from;
 	std::stringstream ss;
-	ss.imbue(std::locale("C"));
+	ss.imbue(std::locale::classic());
 	ss<<time(0)<<" "<<replyTo<<": <"<<from<<"> "
 	  <<CleanMessageForDisplay(from, message[1]);
 	Log(replyTo, ss.str());

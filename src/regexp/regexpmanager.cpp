@@ -10,8 +10,10 @@
 
 #include <iostream>
 
-RegExpManager::RegExpManager(const std::string& regExpFile)
-    : regExpFile_(regExpFile)
+RegExpManager::RegExpManager(const std::string& regExpFile,
+			     const std::string& locale)
+    : locale_(locale.c_str())
+    , regExpFile_(regExpFile)
 {
     std::ifstream fin(regExpFile.c_str());
 
@@ -122,7 +124,7 @@ RegExpManager::FindRegExps(const std::string& searchString) const
     RegExpContainerPtr matches(new RegExpContainer());
 
     // Use the regexp class to find regexps, bit of a hack but saves coding
-    RegExp regExp(searchString, "found");
+    RegExp regExp(searchString, "found", locale_);
 
     for(RegExpContainer::const_iterator i = regExps_.begin();
 	i != regExps_.end();
@@ -172,7 +174,7 @@ RegExpManager::ChangeRegExp(const std::string& regexp,
 	{
 	    try
 	    {
-		*i = RegExp(decodedNewRegExp, i->GetReply());
+		*i = RegExp(decodedNewRegExp, i->GetReply(), locale_);
 		SaveRegExps();
 		result.Success = true;
 		break;
@@ -273,7 +275,7 @@ RegExpManager::AddRegExpImpl(const std::string& regexp,
 
     try
     {
-	RegExp r(Decode(regexp), reply);
+	RegExp r(Decode(regexp), reply, locale_);
 	regExps_.push_back(r);
 	result.Success = true;
     }

@@ -24,17 +24,6 @@ Client::Client(const std::string& config)
     : config_(config)
     , run_(false)
 {
-    try
-    {
-	if ( !config_.GetLocale().empty() )
-	{
-	    std::locale::global(std::locale(config_.GetLocale().c_str()));
-	}
-    }
-    catch( ... )
-    {
-	std::cerr<<"Locale exception"<<std::endl;
-    }
     struct utsname name;
     if ( uname(&name) == 0 )
     {

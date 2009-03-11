@@ -20,7 +20,7 @@ public:
 	std::string ErrorMessage;
     };
 
-    RegExpManager(const std::string& regExpFile);
+    RegExpManager(const std::string& regExpFile, const std::string& locale);
 
     /**
      * Add regexp and save changes (no need to call SaveRegExps())
@@ -86,6 +86,7 @@ private:
     RegExpResult AddRegExpImpl(const std::string& regexp,
 			       const std::string& reply);
 
+    std::locale locale_;
     std::string regExpFile_;
 
     RegExpContainer regExps_;
