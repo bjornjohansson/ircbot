@@ -5,8 +5,8 @@ NamedPipe::NamedPipe(const std::string& pipeName)
     , pipe_(ioService_)
 {
     boost::system::error_code error;
-    pipe_.assign(*pipeFd_, error);
-    if ( *pipeFd_ < 0 || error )
+    pipe_.assign(pipeFd_, error);
+    if ( pipeFd_ < 0 || error )
     {
 	throw Exception(__FILE__, __LINE__, "Could not open named pipe");
     }

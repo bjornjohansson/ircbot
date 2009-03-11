@@ -29,21 +29,10 @@ private:
     void CreateReceiver();
     void ReceiveLine(const std::string& line);
 
-    class FileDescriptor
-    {
-    public:
-	FileDescriptor(int fd) : fd_(fd) {}
-	~FileDescriptor() { if ( fd_ > 0 ) { close(fd_); } }
-
-	const int& operator*() const { return fd_; }
-    private:
-	int fd_;
-    };
-
     typedef boost::weak_ptr<Receiver> ReceiverWeakPtr;
     typedef std::list<ReceiverWeakPtr> ReceiverContainer;
     std::list<ReceiverWeakPtr> receivers_;
-    FileDescriptor pipeFd_;
+    int pipeFd_;
     boost::asio::io_service ioService_;
     boost::asio::posix::stream_descriptor pipe_;
     boost::array<char, 1024> buffer_;
