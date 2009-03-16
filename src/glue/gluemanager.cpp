@@ -30,13 +30,6 @@ void GlueManager::Reset(boost::shared_ptr<Lua> lua, Client* client)
     }
 }
 
-void GlueManager::AddFunction(GlueManager::GlueFunction f,
-			      const std::string& name)
-{
-    functionHandles_.push_back(lua_->RegisterFunction(name, f));
-}
-
-
 GlueManager::GlueManager()
 {
 

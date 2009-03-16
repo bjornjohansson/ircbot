@@ -47,3 +47,7 @@ void Glue::CheckArgument(lua_State* lua, int argumentNumber, int expectedType)
 			 argumentNumber, message.c_str());
 }
 
+void Glue::AddFunction(Glue::GlueFunction f, const std::string& name)
+{
+    functionHandles_.push_back(lua_->RegisterFunction(name, f));
+}

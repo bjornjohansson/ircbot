@@ -65,30 +65,23 @@ RegexpGlue::RegexpGlue()
 
 void RegexpGlue::AddFunctions()
 {
-    GlueManager::Instance().AddFunction(boost::bind(&RegexpGlue::AddRegExp,
-						    this, _1), "RegExpAdd");
-    GlueManager::Instance().AddFunction(boost::bind(&RegexpGlue::DeleteRegExp,
-						    this, _1), "RegExpDelete");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &RegexpGlue::RegExpMatchAndReply,
-					    this, _1), "RegExpMatchAndReply");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &RegexpGlue::RegExpFindMatch, this,
-					    _1), "RegExpFindMatch");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &RegexpGlue::RegExpFindRegExp,
-					    this, _1), "RegExpFindRegExp");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &RegexpGlue::RegExpChangeReply,
-					    this, _1), "RegExpChangeReply");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &RegexpGlue::RegExpChangeRegExp,
-					    this, _1), "RegExpChangeRegExp");
-    GlueManager::Instance().AddFunction(boost::bind(&RegexpGlue::RegExpMoveUp,
-						    this, _1), "RegExpMoveUp");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &RegexpGlue::RegExpMoveDown, this,
-					    _1), "RegExpMoveDown");
+    AddFunction(boost::bind(&RegexpGlue::AddRegExp, this, _1), "RegExpAdd");
+    AddFunction(boost::bind(&RegexpGlue::DeleteRegExp, this, _1),
+		"RegExpDelete");
+    AddFunction(boost::bind(&RegexpGlue::RegExpMatchAndReply, this, _1),
+		"RegExpMatchAndReply");
+    AddFunction(boost::bind(&RegexpGlue::RegExpFindMatch, this, _1),
+		"RegExpFindMatch");
+    AddFunction(boost::bind(&RegexpGlue::RegExpFindRegExp, this, _1),
+		"RegExpFindRegExp");
+    AddFunction(boost::bind(&RegexpGlue::RegExpChangeReply, this, _1),
+		"RegExpChangeReply");
+    AddFunction(boost::bind(&RegexpGlue::RegExpChangeRegExp, this, _1),
+		"RegExpChangeRegExp");
+    AddFunction(boost::bind(&RegexpGlue::RegExpMoveUp, this, _1),
+		"RegExpMoveUp");
+    AddFunction(boost::bind(&RegexpGlue::RegExpMoveDown, this, _1),
+		"RegExpMoveDown");
 }
 
 

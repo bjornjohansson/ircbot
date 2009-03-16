@@ -4,8 +4,9 @@
 #include <string>
 
 #include "glue.fwd.hpp"
-#include "../lua/lua.hpp"
+#include "../lua/lua.fwd.hpp"
 #include "../lua/luafunction.fwd.hpp"
+#include "../client.fwd.hpp"
 
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
@@ -19,8 +20,6 @@ extern "C"
 }
 #endif
 
-class Client;
-
 class GlueManager
 {
 public:
@@ -29,9 +28,6 @@ public:
     void RegisterGlue(Glue* glue);
 
     void Reset(boost::shared_ptr<Lua> lua, Client* client);
-
-    typedef boost::function<int (lua_State*)> GlueFunction;
-    void AddFunction(GlueFunction, const std::string& name);
 
 private:
     GlueManager();
@@ -42,7 +38,4 @@ private:
     GlueContainer glues_;
 
     boost::shared_ptr<Lua> lua_;
-
-    typedef std::list<Lua::LuaFunctionHandle> FunctionHandleContainer;
-    FunctionHandleContainer functionHandles_;
 };

@@ -93,25 +93,20 @@ MessageGlue::MessageGlue()
 
 void MessageGlue::AddFunctions()
 {
-    GlueManager::Instance().AddFunction(boost::bind(&MessageGlue::Send,
-						    this, _1), "Send");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &MessageGlue::RecurseMessage,
-					    this, _1),
-					"RecurseMessage");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &MessageGlue::RegisterForEvent,
-					    this, _1),
-					"RegisterForEvent");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &MessageGlue::RegisterBlockingCall,
-					    this, _1),
-					"RegisterBlockingCall");
+    AddFunction(boost::bind(&MessageGlue::Send, this, _1), "Send");
+    AddFunction(boost::bind(&MessageGlue::RecurseMessage, this, _1),
+		"RecurseMessage");
+    AddFunction(boost::bind(&MessageGlue::RegisterForEvent, this, _1),
+		"RegisterForEvent");
+    AddFunction(boost::bind(&MessageGlue::RegisterBlockingCall, this, _1),
+		"RegisterBlockingCall");
 }
 
 void MessageGlue::Reset(boost::shared_ptr<Lua> lua,
 			Client* client)
 {
+    eventFunctions_.clear();
+    blockingCalls_.clear();
     Glue::Reset(lua, client);
     messageHandle_ =
 	client_->RegisterForMessages(boost::bind(&MessageGlue::OnMessageEvent,

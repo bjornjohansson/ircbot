@@ -27,8 +27,7 @@ SystemGlue::SystemGlue()
 
 void SystemGlue::AddFunctions()
 {
-    GlueManager::Instance().AddFunction(boost::bind(&SystemGlue::RunCommand,
-						    this, _1), "Execute");
+    AddFunction(boost::bind(&SystemGlue::RunCommand, this, _1), "Execute");
 }
 
 int SystemGlue::RunCommand(lua_State* lua)

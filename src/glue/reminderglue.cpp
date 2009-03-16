@@ -32,11 +32,10 @@ ReminderGlue::ReminderGlue()
 
 void ReminderGlue::AddFunctions()
 {
-    GlueManager::Instance().AddFunction(boost::bind(&ReminderGlue::AddReminder,
-						    this, _1), "ReminderAdd");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &ReminderGlue::FindReminder,
-					    this, _1), "ReminderFind");
+    AddFunction(boost::bind(&ReminderGlue::AddReminder, this, _1),
+		"ReminderAdd");
+    AddFunction(boost::bind(&ReminderGlue::FindReminder, this, _1),
+		"ReminderFind");
 }
 
 void ReminderGlue::Reset(boost::shared_ptr<Lua> lua,

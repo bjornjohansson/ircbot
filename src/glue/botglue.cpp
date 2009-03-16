@@ -24,8 +24,7 @@ BotGlue::BotGlue()
 
 void BotGlue::AddFunctions()
 {
-    GlueManager::Instance().AddFunction(boost::bind(&BotGlue::GetMyNick,
-						    this, _1), "GetMyNick");
+    AddFunction(boost::bind(&BotGlue::GetMyNick, this, _1), "GetMyNick");
 }
 
 int BotGlue::GetMyNick(lua_State* lua)

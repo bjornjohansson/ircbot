@@ -33,13 +33,10 @@ ChannelGlue::ChannelGlue()
 
 void ChannelGlue::AddFunctions()
 {
-    GlueManager::Instance().AddFunction(boost::bind(&ChannelGlue::JoinChannel,
-						    this, _1), "Join");
-    GlueManager::Instance().AddFunction(boost::bind(&ChannelGlue::Kick,
-						    this, _1), "Kick");
-    GlueManager::Instance().AddFunction(boost::bind(
-					    &ChannelGlue::GetChannelNicks,
-					    this, _1), "GetChannelNicks");
+    AddFunction(boost::bind(&ChannelGlue::JoinChannel, this, _1), "Join");
+    AddFunction(boost::bind(&ChannelGlue::Kick, this, _1), "Kick");
+    AddFunction(boost::bind(&ChannelGlue::GetChannelNicks, this, _1),
+		"GetChannelNicks");
 }
 
 int ChannelGlue::JoinChannel(lua_State* lua)

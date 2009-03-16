@@ -1,8 +1,10 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
 
 #include <utility>
+#include <list>
 
 #ifdef LUA_EXTERN
 extern "C" {
@@ -13,7 +15,8 @@ extern "C" {
 #endif
 
 class Client;
-class Lua;
+
+#include "../lua/lua.hpp"
 
 class Glue
 {
@@ -23,6 +26,12 @@ public:
 protected:
     virtual void AddFunctions() = 0;
     void CheckArgument(lua_State* lua, int argumentNumber, int expectedType);
+
+    typedef boost::function<int (lua_State*)> GlueFunction;
+    void AddFunction(GlueFunction, const std::string& name);
+
+    typedef std::list<Lua::LuaFunctionHandle> FunctionHandleContainer;
+    FunctionHandleContainer functionHandles_;
 
     boost::shared_ptr<Lua> lua_;
     Client* client_;

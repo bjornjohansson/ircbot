@@ -3,6 +3,7 @@
 #include "searchidle.h"
 #include "glue/gluemanager.hpp"
 #include "irc/message.hpp"
+#include "lua/lua.hpp"
 
 #include <iostream>
 #include <fstream>

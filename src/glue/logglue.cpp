@@ -25,10 +25,8 @@ LogGlue::LogGlue()
 
 void LogGlue::AddFunctions()
 {
-    GlueManager::Instance().AddFunction(boost::bind(&LogGlue::GetLogName,
-						    this, _1), "GetLogName");
-    GlueManager::Instance().AddFunction(boost::bind(&LogGlue::GetLastLine,
-						    this, _1), "GetLastLine");
+    AddFunction(boost::bind(&LogGlue::GetLogName, this, _1), "GetLogName");
+    AddFunction(boost::bind(&LogGlue::GetLastLine, this, _1), "GetLastLine");
 }
 
 int LogGlue::GetLogName(lua_State* lua)
