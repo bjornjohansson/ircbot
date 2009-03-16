@@ -211,6 +211,21 @@ local function RegExp_ChooseRandom(openBracket, content, closeBracket)
    return outcomes[outcome]
 end
 
+local function RegExp_ReplaceEscapeCode(message, code, replacement)
+   local reply = message
+   local pos = reply:find(code)
+   while pos do
+      if pos == 1 or reply:sub(pos-1, pos-1) ~= "\\" then
+	 reply = reply:sub(1, pos-1)..replacement..reply:sub(pos+2)
+      elseif reply:sub(pos-1, pos-1) == "\\" then
+	 reply = reply:sub(1, pos-1)..reply:sub(pos+1)
+	 pos = pos + 2
+      end
+      pos = reply:find(code, pos)
+   end
+   return reply
+end
+
 local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
    local reply = subbedReply
    local matches = 1
@@ -219,7 +234,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
 
    if string.find(reply, "\\N") or 0 > 0 then
       local nicks = GetChannelNicks(RegExp_Channel, RegExp_Server)
-      reply = string.gsub(reply, "\\N", table.concat(nicks, "|"))
+      reply = RegExp_ReplaceEscapeCode(reply, "\\N", table.concat(nicks, "|"))
    end
 
  
@@ -232,17 +247,17 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
       end
    end
 
-   reply = string.gsub(reply, "\\n", RegExp_FromNick);
+   reply = RegExp_ReplaceEscapeCode(reply, "\\n", RegExp_FromNick)
 
-   reply = string.gsub(reply, "\\b", GetMyNick(RegExp_Server))
-   reply = string.gsub(reply, "\\s", RegExp_Channel)
+   reply = RegExp_ReplaceEscapeCode(reply, "\\b", GetMyNick(RegExp_Server))
+   reply = RegExp_ReplaceEscapeCode(reply, "\\s", RegExp_Channel)
    local logname = string.gsub(GetLogName(RegExp_Channel, RegExp_Server),
 			       "#", "\\#")
-   reply = string.gsub(reply, "\\l", logname)
-   reply = string.gsub(reply, "\\c", "\1")
+   reply = RegExp_ReplaceEscapeCode(reply, "\\l", logname)
+   reply = RegExp_ReplaceEscapeCode(reply, "\\c", "\1")
 
    if RegExp_Direct then
-      reply = string.gsub(reply, "\\D", "")
+      reply = RegExp_ReplaceEscapeCode(reply, "\\D", "")
    elseif string.find(reply, "\\D") == 1 then
       return ""
    end
