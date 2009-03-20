@@ -185,7 +185,7 @@ local function RegExp_CheckCommands(message)
 
    local index = string.find(message, "`")
    while index do
-      if index == 1 or message[index-1] ~= "\\" then
+      if index == 1 or (message:find("\\", index-1) or 0) ~= index-1 then
 	 local endQuote = string.find(message, "[^\\]`", index+1)
 	 if endQuote and index+1 <= endQuote then
 	    local command = string.sub(message, index+1, endQuote)
@@ -197,6 +197,9 @@ local function RegExp_CheckCommands(message)
 	    message = string.sub(message, 1, index-1)..result
 	       ..string.sub(message, endQuote+2)
 	 end
+      else
+	 message = message:sub(1, index-2)..message:sub(index)
+	 index = index - 1
       end
       index = string.find(message, "`", index+1)
    end
