@@ -3,6 +3,7 @@
 #include "searchidle.h"
 #include "glue/gluemanager.hpp"
 #include "irc/message.hpp"
+#include "irc/server.hpp"
 #include "lua/lua.hpp"
 
 #include <iostream>
@@ -176,7 +177,7 @@ const std::string& Client::GetNick(const std::string& serverId)
     return GetServerFromId(serverId).GetNick();
 }
 
-const Server::NickContainer&
+const std::set<std::string>&
 Client::GetChannelNicks(const std::string& channel,
 			const std::string& serverId)
 {

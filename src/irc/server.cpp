@@ -217,7 +217,7 @@ void Server::Kick(const std::string& channel,
 	 std::string(" :")+(message.empty() ? "" : message));
 }
 
-const Server::NickContainer&
+const std::set<std::string>&
 Server::GetChannelNicks(const std::string& channel) const
 {
     boost::shared_lock<boost::shared_mutex> lock(channelsMutex_);

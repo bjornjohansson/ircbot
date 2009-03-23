@@ -116,7 +116,7 @@ int ChannelGlue::GetChannelNicks(lua_State* lua)
 	}
     }
 
-    const Server::NickContainer& nicks = client_->GetChannelNicks(channel,
+    const std::set<std::string>& nicks = client_->GetChannelNicks(channel,
 								  server);
 
     int count = std::distance(nicks.begin(), nicks.end());
@@ -124,7 +124,7 @@ int ChannelGlue::GetChannelNicks(lua_State* lua)
     lua_createtable(lua, count, 0);
     int mainTableIndex = lua_gettop(lua);
 
-    for(Server::NickContainer::const_iterator nick = nicks.begin();
+    for(std::set<std::string>::const_iterator nick = nicks.begin();
 	nick != nicks.end();
 	++nick)
     {

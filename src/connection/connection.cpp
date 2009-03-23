@@ -17,10 +17,11 @@
 
 const time_t CONNECTION_TIMEOUT_SECONDS = 300;
 // Number of seconds before attempting a new reconnect
-const int RECONNECT_TIMEOUT = 60;
+const int RECONNECT_TIMEOUT = 30;
 
 Connection::Connection()
     : socket_(ioService_)
+    , timer_(ioService_)
     , port_(0)
     , lastReception_(0)
     , connected_(false)
@@ -32,6 +33,7 @@ Connection::Connection()
 
 Connection::Connection(const std::string& host, const unsigned short port)
     : socket_(ioService_)
+    , timer_(ioService_)
     , port_(0)
     , lastReception_(0)
     , connected_(false)
@@ -154,7 +156,7 @@ Connection::RegisterOnConnectCallback(OnConnectCallback c)
 
 bool Connection::IsTimedOut() const
 {
-    return lastReception_+CONNECTION_TIMEOUT_SECONDS < time(0);
+    return lastReception_+CONNECTION_TIMEOUT_SECONDS <= time(0);
 }
 
 bool Connection::IsConnected() const
@@ -204,6 +206,22 @@ void Connection::OnConnect(const boost::system::error_code& error,
     }
 }
 
+void Connection::InitTimer()
+{
+    timer_.cancel();
+    timer_.expires_from_now(
+	boost::posix_time::seconds(CONNECTION_TIMEOUT_SECONDS));
+    timer_.async_wait(boost::bind(&Connection::OnTimeOut, this, _1));
+}
+
+void Connection::OnTimeOut(const boost::system::error_code& error)
+{
+    if ( !error )
+    {
+	CheckConnection();
+    }
+}
+
 
 void Connection::CreateReceiver()
 {
@@ -218,6 +236,7 @@ void Connection::Receive(const boost::system::error_code& error,
     if ( !error )
     {
 	lastReception_ = time(0);
+	InitTimer();
 
 	std::vector<char> data(bytes);
 	std::copy(buffer_.begin(), buffer_.begin()+bytes, data.begin());
@@ -275,7 +294,9 @@ void Connection::CheckConnection()
     {
 	if ( IsConnected() && IsTimedOut() )
 	{
-	    std::clog<<"Attempting to reconnect"<<std::endl;
+	    std::clog<<"Connection to "<<host_<<":"<<port_<<" timed out after "
+		     <<time(0)-lastReception_<<" seconds, reconnecting"
+		     <<std::endl;
 	    Reconnect();
 	}
     }

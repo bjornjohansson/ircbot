@@ -1,13 +1,15 @@
 #pragma once
 
-#include "irc/server.hpp"
+#include "irc/server.fwd.hpp"
 #include "irc/prefix.fwd.hpp"
+#include "irc/message.fwd.hpp"
 #include "config.hpp"
 #include "lua/lua.fwd.hpp"
 #include "connection/namedpipe.hpp"
 
 #include <string>
 #include <map>
+#include <set>
 
 #include <boost/shared_ptr.hpp>
 
@@ -65,7 +67,7 @@ public:
     /**
      * @throw Exception if no matching server or channel found
      */
-    const Server::NickContainer& GetChannelNicks(const std::string& channel = std::string(),
+    const std::set<std::string>& GetChannelNicks(const std::string& channel = std::string(),
 						 const std::string& serverid = std::string());
 
     typedef boost::function<void (const std::string&, //server
@@ -110,7 +112,7 @@ private:
     void InitLua();
 
     typedef boost::shared_ptr<Server> ServerPtr;
-    typedef std::pair<ServerPtr, Server::ReceiverHandle> ServerAndHandle;
+    typedef std::pair<ServerPtr, ServerReceiverHandle> ServerAndHandle;
     typedef std::map<std::string,ServerAndHandle> ServerHandleMap;
     ServerHandleMap servers_;
     mutable boost::shared_mutex serverMutex_;

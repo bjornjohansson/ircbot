@@ -1,6 +1,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "server.fwd.hpp"
+
 #include "../connection/connection.hpp"
 #include "message.fwd.hpp"
 
@@ -50,8 +52,8 @@ public:
     const std::string& GetHostName() const;
     const std::string& GetNick() const;
 
-    typedef boost::function<void (Server&, const Irc::Message&)> Receiver;
-    typedef boost::shared_ptr<Receiver> ReceiverHandle;
+    typedef ServerReceiver Receiver;
+    typedef ServerReceiverHandle ReceiverHandle;
 
     /**
      * Register a function as a receiver, the return value is a handle
@@ -71,11 +73,10 @@ public:
 	      const std::string& user,
 	      const std::string& message);
 
-    typedef std::set<std::string> NickContainer;
     /**
      * @throw Exception if channel not found
      */
-    const NickContainer& GetChannelNicks(const std::string& channel) const;
+    const std::set<std::string>& GetChannelNicks(const std::string& channel) const;
     
 
 private:
@@ -122,7 +123,7 @@ private:
     ChannelKeyMap channels_;
     mutable boost::shared_mutex channelsMutex_;
 
-    typedef std::map<std::string, NickContainer> ChannelNicksContainer;
+    typedef std::map<std::string,std::set<std::string> > ChannelNicksContainer;
     ChannelNicksContainer channelNicks_;
     bool appendingChannelNicks_;
     boost::shared_mutex channelNicksMutex_;

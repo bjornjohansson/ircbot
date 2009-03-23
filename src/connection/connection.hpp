@@ -65,6 +65,9 @@ private:
     void OnConnect(const boost::system::error_code& error,
 		   boost::asio::ip::tcp::resolver::iterator endpointIt);
 
+    void InitTimer();
+    void OnTimeOut(const boost::system::error_code& error);
+
     void CreateReceiver();
     void Receive(const boost::system::error_code& error,
 		 const std::size_t& bytes);
@@ -74,6 +77,7 @@ private:
 
     boost::asio::io_service ioService_;
     boost::asio::ip::tcp::socket socket_;
+    boost::asio::deadline_timer timer_;
     boost::mutex socketMutex_;
     boost::array<char, RECEIVE_BUFFER_SIZE> buffer_;
 
