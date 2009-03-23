@@ -185,7 +185,8 @@ const ReminderManager::Reminder& ReminderManager::GetNextReminder() const
 
 void ReminderManager::Timer()
 {
-    std::cout<<"Reminder thread starting"<<std::endl;
+    std::cout<<"Reminder thread "<<boost::this_thread::get_id()
+	     <<" starting"<<std::endl;
     while ( runTimer_ )
     {
 	boost::unique_lock<boost::mutex> lock(timerMutex_);
@@ -232,6 +233,8 @@ void ReminderManager::Timer()
 	    }
 	}
     }
+    std::cout<<"Reminder thread "<<boost::this_thread::get_id()
+	     <<" ending"<<std::endl;
 }
 
 void ReminderManager::SaveReminders()
