@@ -85,11 +85,12 @@ void Client::Receive(Server& server, const Irc::Message& message)
     currentServer_ = server.GetId();
     currentReplyTo_.clear();
 
-    if ( message.GetCommand() == "PING" )
+    if ( message.GetCommand() == Irc::Command::PING )
     {
 	server.Send("PONG "+server.GetHostName());
     }
-    else if ( message.GetCommand() == "PRIVMSG" && message.size() >= 2)
+    else if ( message.GetCommand() == Irc::Command::PRIVMSG &&
+	      message.size() >= 2)
     {
 	OnPrivMsg(server, message);
     }

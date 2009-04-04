@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prefix.hpp"
+#include "command.hpp"
 
 #include <string>
 #include <vector>
@@ -22,7 +23,7 @@ public:
 		      ParameterContainer::const_iterator> ParameterIterators;
 
     const Prefix& GetPrefix() const { return prefix_; }
-    const std::string& GetCommand() const { return command_; }
+    const Command::Command& GetCommand() const { return command_; }
     ParameterIterators GetParameters() const
 	{ return ParameterIterators(parameters_.begin(), parameters_.end()); }
 
@@ -33,7 +34,7 @@ public:
 
 private:
     Prefix prefix_;
-    std::string command_;
+    Command::Command command_;
     ParameterContainer parameters_;
 
     static boost::regex dataRegex_;

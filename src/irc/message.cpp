@@ -23,7 +23,14 @@ Irc::Message::Message(const std::string& data)
 	{
 	    // matches[0] is the entire match, submatches start at 1
 	    prefix_ = Prefix(matches[1]);
-	    command_ = matches[2];
+	    try
+	    {
+		command_ = Commands.at(matches[2]);
+	    }
+	    catch ( std::out_of_range& )
+	    {
+		command_ = Command::UNKNOWN_COMMAND;
+	    }
 
 	    // The non-space parameters are matched as an entire string.
 	    // Since boost might not support captures for each match

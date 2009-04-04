@@ -247,7 +247,8 @@ void Server::OnText(const std::string& text)
     Irc::Message message(text);
 
     // Log messages
-    if ( message.GetCommand() == "PRIVMSG" && message.size() >= 2)
+    if ( message.GetCommand() == Irc::Command::PRIVMSG &&
+	 message.size() >= 2)
     {
 	const std::string& from = message.GetPrefix().GetNick();
 	const std::string& to = message[0];
@@ -258,10 +259,9 @@ void Server::OnText(const std::string& text)
 	  <<CleanMessageForDisplay(from, message[1]);
 	Log(replyTo, ss.str());
     }
-    else if ( message.GetCommand() == "353" && message.size() >= 4)
+    else if ( message.GetCommand() == Irc::Command::RPL_NAMREPLY &&
+	      message.size() >= 4)
     {
-	// RPL_NAMREPLY
-
 	std::string channel = message[2];
 
 	if ( channel.find_first_of("#&") == 0 )
@@ -277,7 +277,7 @@ void Server::OnText(const std::string& text)
 		{
 		    nick.erase(0, 1);
 		}
-		
+
 		if ( nick.size() > 0 )
 		{
 		    channelNicks_[channel].insert(nick);
@@ -285,19 +285,20 @@ void Server::OnText(const std::string& text)
 	    }
 	}
     }
-    else if ( message.GetCommand() == "366" )
+    else if ( message.GetCommand() == Irc::Command::RPL_ENDOFNAMES )
     {
 	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	appendingChannelNicks_ = false;
     }
-    else if ( message.GetCommand() == "PART" && message.size() >= 1 )
+    else if ( message.GetCommand() == Irc::Command::PART &&
+	      message.size() >= 1 )
     {
 	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	const std::string& nick = message.GetPrefix().GetNick();
 	const std::string& channel = message[0];
 	channelNicks_[channel].erase(nick);
     }
-    else if ( message.GetCommand() == "QUIT" )
+    else if ( message.GetCommand() == Irc::Command::QUIT )
     {
 	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	const std::string& nick = message.GetPrefix().GetNick();
@@ -308,14 +309,16 @@ void Server::OnText(const std::string& text)
 	    channel->second.erase(nick);
 	}	    
     }
-    else if ( message.GetCommand() == "JOIN" && message.size() >= 1 )
+    else if ( message.GetCommand() == Irc::Command::JOIN &&
+	      message.size() >= 1 )
     {
 	boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
 	const std::string& nick = message.GetPrefix().GetNick();
 	const std::string& channel = message[0];
 	channelNicks_[channel].insert(nick);
     }
-    else if ( message.GetCommand() == "NICK" && message.size() >= 1 )
+    else if ( message.GetCommand() == Irc::Command::NICK &&
+	      message.size() >= 1 )
     {
 	const std::string& oldNick = message.GetPrefix().GetNick();
 	const std::string& newNick = message[0];
@@ -329,7 +332,8 @@ void Server::OnText(const std::string& text)
 	    channel->second.insert(newNick);
 	}
     }
-    else if ( message.GetCommand() == "KICK" && message.size() >= 2 )
+    else if ( message.GetCommand() == Irc::Command::KICK &&
+	      message.size() >= 2 )
     {
 	const std::string& channel = message[0];
 	const std::string& victim = message[1];
@@ -377,7 +381,6 @@ void Server::OnText(const std::string& text)
 	    i = receivers_.erase(i);
 	}
     }
-
 }
 
 void Server::RegisterSelfAsReceiver()
