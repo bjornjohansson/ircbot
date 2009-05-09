@@ -21,18 +21,6 @@
 class Server : boost::noncopyable
 {
 public:
-/*
-    namespace Events
-    {
-	enum Events
-	{
-	    Join,
-	    Leave,
-	    Nick,
-	    Kick
-	};
-    }
-*/
     /**
      * @throw Exception if unable to connect
      */
@@ -41,11 +29,8 @@ public:
 	   unsigned int port,
 	   const std::string& logsDirectory,
 	   const std::string& nick);
-//    Server(const Server& rhs);
     virtual ~Server();
 
-//    Server& operator=(const Server& rhs);
-    
     void Send(const std::string& data);
 
     const std::string& GetId() const;

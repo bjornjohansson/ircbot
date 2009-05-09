@@ -2,7 +2,7 @@
 #include "gluemanager.hpp"
 #include "../client.hpp"
 #include "../exception.hpp"
-#include "../irc/prefix.hpp"
+#include "../irc/message.hpp"
 #include "../lua/luafunction.hpp"
 
 #include <boost/bind.hpp>
@@ -36,8 +36,7 @@ public:
 private:
     void AddFunctions();
 
-    void OnMessageEvent(const std::string& server, const Irc::Prefix& from,
-			const std::string& to, const std::string& message);
+    void OnEvent(const std::string& server, const Irc::Message& message);
 
     typedef std::list<std::string> StringContainer;
     typedef boost::shared_ptr<StringContainer> StringContainerPtr;
@@ -74,7 +73,7 @@ private:
     typedef std::list<BlockingCall> BlockingCallContainer;
     BlockingCallContainer blockingCalls_;
 
-    Client::MessageEventReceiverHandle messageHandle_;
+    Client::EventReceiverHandle eventHandle_;
     int recursions_;
 
     std::string lastServer_;
@@ -108,9 +107,9 @@ void MessageGlue::Reset(boost::shared_ptr<Lua> lua,
     eventFunctions_.clear();
     blockingCalls_.clear();
     Glue::Reset(lua, client);
-    messageHandle_ =
-	client_->RegisterForMessages(boost::bind(&MessageGlue::OnMessageEvent,
-						 this, _1, _2, _3, _4));
+    eventHandle_ = client_->RegisterForEvent(Irc::Command::PRIVMSG,
+					     boost::bind(&MessageGlue::OnEvent,
+							 this, _1, _2));
 }
 
 
@@ -267,15 +266,17 @@ int MessageGlue::RegisterBlockingCall(lua_State* lua)
     return 0;
 }
 
-void MessageGlue::OnMessageEvent(const std::string& server,
-				 const Irc::Prefix& from,
-				 const std::string& to,
-				 const std::string& message)
+void MessageGlue::OnEvent(const std::string& server, 
+			  const Irc::Message& message)
 {
     // Extract nick, user and host from the from-user string (nick!user@host)
+    const Irc::Prefix& from = message.GetPrefix();
+    const std::string& to = message.GetTarget();
     const std::string& fromNick = from.GetNick();
     const std::string& fromUser = from.GetUser();
     const std::string& fromHost = from.GetHost();
+    const std::string& text = message.GetText();
+    const std::string& replyTo = message.GetReplyTo();
 
     lastServer_ = server;
     lastFromNick_ = fromNick;
@@ -283,17 +284,9 @@ void MessageGlue::OnMessageEvent(const std::string& server,
     lastFromHost_ = fromHost;
     lastTo_ = to;
 
-    // If the message was sent to a channel we reply to that channel.
-    // If it was sent directly to us we reply to the sender
-    std::string replyTo = fromNick;
-    if ( to.find_first_of("&#") == 0 )
-    {
-	replyTo = to;
-    }
-
     recursions_ = 0;
     StringContainerPtr lines = ProcessMessageEvent(server, fromNick, fromUser,
-						   fromHost, to, message);
+						   fromHost, to, text);
     recursions_ = 0;
 
     try

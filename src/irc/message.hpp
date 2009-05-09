@@ -27,10 +27,18 @@ public:
     ParameterIterators GetParameters() const
 	{ return ParameterIterators(parameters_.begin(), parameters_.end()); }
 
+    typedef ParameterContainer::const_iterator const_iterator;
+
+    const_iterator begin() const { return parameters_.begin(); }
+    const_iterator end() const { return parameters_.end(); }
+
     template<class T>
     const std::string& operator[](T index) const { return parameters_[index]; }
     ParameterContainer::size_type size() const { return parameters_.size(); }
 
+    const std::string& GetTarget() const;
+    const std::string& GetText() const;
+    const std::string& GetReplyTo() const;
 
 private:
     Prefix prefix_;

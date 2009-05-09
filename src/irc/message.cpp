@@ -52,3 +52,36 @@ Irc::Message::Message(const std::string& data)
 	throw Exception(__FILE__, __LINE__, e.what());
     }
 }
+
+const std::string& Irc::Message::GetTarget() const
+{
+    if ( GetCommand() == Command::PRIVMSG )
+    {
+	return parameters_[0];
+    }
+    throw Exception(__FILE__, __LINE__,
+		    std::string("Invalid call to Irc::Message::GetTarget() for message of type ")+
+		    StringFromCommand(GetCommand()));
+}
+
+const std::string& Irc::Message::GetText() const
+{
+    if ( GetCommand() == Command::PRIVMSG )
+    {
+	return parameters_[1];
+    }
+    throw Exception(__FILE__, __LINE__,
+		    std::string("Invalid call to Irc::Message::GetText() for message of type ")+
+		    StringFromCommand(GetCommand()));
+}
+
+const std::string& Irc::Message::GetReplyTo() const
+{
+    // If the message was sent to a channel we reply to that channel.
+    // If it was sent directly to us we reply to the sender
+    if ( GetTarget().find_first_of("&#") == 0 )
+    {
+	return GetTarget();
+    }
+    return GetPrefix().GetNick();
+}

@@ -85,14 +85,31 @@ void Client::Receive(Server& server, const Irc::Message& message)
     currentServer_ = server.GetId();
     currentReplyTo_.clear();
 
-    if ( message.GetCommand() == Irc::Command::PING )
+    const Irc::Command::Command command = message.GetCommand();
+    if ( command == Irc::Command::PING )
     {
 	server.Send("PONG "+server.GetHostName());
     }
-    else if ( message.GetCommand() == Irc::Command::PRIVMSG &&
-	      message.size() >= 2)
+    else if ( command == Irc::Command::PRIVMSG &&
+	      message.size() >= 2 &&
+	      !OnPrivMsg(server, message) )
     {
-	OnPrivMsg(server, message);
+	if ( boost::iequals(server.GetNick(), message.GetPrefix().GetNick()) )
+	{
+	    // We do not process messages from ourself
+	    return;
+	}
+	boost::shared_lock<boost::shared_mutex> lock(receiverMutex_);
+	for(EventReceiverContainer::iterator i
+		= eventReceivers_[command].begin();
+	    i != eventReceivers_[command].end();
+	    ++i)
+	{
+	    if ( EventReceiverHandle f = i->lock() )
+	    {
+		(*f)(server.GetId(), message);
+	    }
+	}
     }
 }
 
@@ -126,12 +143,13 @@ void Client::SendMessage(const std::string& message,
     GetServerFromId(serverId).SendMessage(to, message);
 }
 
-Client::MessageEventReceiverHandle Client::RegisterForMessages(
-    MessageEventReceiver r)
+Client::EventReceiverHandle
+Client::RegisterForEvent(const Irc::Command::Command& event,
+			 EventReceiver receiver)
 {
     boost::upgrade_lock<boost::shared_mutex> lock(receiverMutex_);
-    MessageEventReceiverHandle handle(new MessageEventReceiver(r));
-    messageEventReceivers_.push_back(MessageEventReceiverPtr(handle));
+    EventReceiverHandle handle(new EventReceiver(receiver));
+    eventReceivers_[event].push_back(EventReceiverPtr(handle));
     return handle;
 }
 
@@ -253,64 +271,32 @@ Server& Client::Connect(const std::string& id,
     return *s->second.first;
 }
 
-void Client::OnPrivMsg(Server& server, const Irc::Message& message)
+bool Client::OnPrivMsg(Server& server, const Irc::Message& message)
 {
     const std::string& fromNick = message.GetPrefix().GetNick();
     const std::string& to = message[0];
     const std::string& text = message[1];
 
-    currentReplyTo_ = to;
-    if ( currentReplyTo_.find_first_of("#&") != 0 )
-    {
-	currentReplyTo_ = fromNick;
-    }
-
     if ( text == (server.GetNick()+": reload") ||
 	 (to == server.GetNick() && text == "reload") )
     {
 	InitLua();
+	return true;
     }
     else if ( text == (server.GetNick()+": quit") ||
 	      (to == server.GetNick() && text == "quit" ))
     {
         runCondition_.notify_all();
+	return true;
     }
     else if ( text.find("\1VERSION") == 0 )
     {
 	server.SendMessage(fromNick, "\1VERSION "+VersionName+" "+
 			   VersionVersion+" running on "+
 			   VersionEnvironment);
+	return true;
     }
-    else
-    {
-	if ( boost::iequals(server.GetNick(), fromNick) )
-	{
-	    // We do not process messages from ourself
-	    return;
-	}
-	std::string cleanedMessage = text;
-	const std::string ctcpAction = "\1ACTION";
-	if ( cleanedMessage.find(ctcpAction) == 0 )
-	{
-	    cleanedMessage.replace(0, ctcpAction.size(), "* "+fromNick);
-	    std::string::size_type pos;
-	    if ( (pos = cleanedMessage.rfind("\1")) != std::string::npos )
-	    {
-		cleanedMessage.erase(pos);
-	    }
-	}
-	boost::shared_lock<boost::shared_mutex> lock(receiverMutex_);
-	for(MessageEventReceiverContainer::iterator i =
-		messageEventReceivers_.begin();
-	    i != messageEventReceivers_.end();
-	    ++i)
-	{
-	    if ( MessageEventReceiverHandle f = i->lock() )
-	    {
-		(*f)(server.GetId(), message.GetPrefix(), to, cleanedMessage);
-	    }
-	}
-    }
+    return false;
 }
 
 void Client::ReceivePipeMessage(const std::string& line)

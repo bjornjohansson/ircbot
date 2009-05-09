@@ -3,6 +3,7 @@
 #include "irc/server.fwd.hpp"
 #include "irc/prefix.fwd.hpp"
 #include "irc/message.fwd.hpp"
+#include "irc/command.hpp"
 #include "config.hpp"
 #include "lua/lua.fwd.hpp"
 #include "connection/namedpipe.hpp"
@@ -12,6 +13,7 @@
 #include <set>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
 
 class Client
 {
@@ -70,12 +72,12 @@ public:
     const std::set<std::string>& GetChannelNicks(const std::string& channel = std::string(),
 						 const std::string& serverid = std::string());
 
-    typedef boost::function<void (const std::string&, //server
-				  const Irc::Prefix&, //from
-				  const std::string&, //to, message
-				  const std::string&)> MessageEventReceiver;
-    typedef boost::shared_ptr<MessageEventReceiver> MessageEventReceiverHandle;
-    MessageEventReceiverHandle RegisterForMessages(MessageEventReceiver r);
+    // void (server, message)
+    typedef boost::function<void (const std::string&,
+				  const Irc::Message&)> EventReceiver;
+    typedef boost::shared_ptr<EventReceiver> EventReceiverHandle;
+    EventReceiverHandle RegisterForEvent(const Irc::Command::Command& event,
+					 EventReceiver receiver);
 
     const Config& GetConfig() const;
 
@@ -99,7 +101,8 @@ private:
 		    unsigned int port,
 		    const std::string& nick);
 
-    void OnPrivMsg(Server& server, const Irc::Message& message);
+    /** @return true if the message should block continued processing */
+    bool OnPrivMsg(Server& server, const Irc::Message& message);
 
     void ReceivePipeMessage(const std::string& line);
 
@@ -126,9 +129,11 @@ private:
     typedef std::map<std::string, OfstreamAndTimestamp> LogStreamMap;
     LogStreamMap logStreams_;
 
-    typedef boost::weak_ptr<MessageEventReceiver> MessageEventReceiverPtr;
-    typedef std::list<MessageEventReceiverPtr> MessageEventReceiverContainer;
-    MessageEventReceiverContainer messageEventReceivers_;
+    typedef boost::weak_ptr<EventReceiver> EventReceiverPtr;
+    typedef std::list<EventReceiverPtr> EventReceiverContainer;
+    typedef boost::unordered_map<Irc::Command::Command,EventReceiverContainer>
+        EventReceiverMap;
+    EventReceiverMap eventReceivers_;
     boost::shared_mutex receiverMutex_;
 
     boost::shared_ptr<Lua> lua_;

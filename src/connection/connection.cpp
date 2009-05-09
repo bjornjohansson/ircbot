@@ -262,6 +262,7 @@ void Connection::Receive(const boost::system::error_code& error,
     else
     {
 	std::cerr<<"Connection::Receive: "<<error.message()<<std::endl;
+	ioService_.stop();
     }
 }
 

@@ -322,4 +322,16 @@ namespace Command
     ("258", Command::RPL_ADMINLOC2) 
     ("259", Command::RPL_ADMINEMAIL);
 
+    inline std::string StringFromCommand(const Command::Command& command)
+    {
+	for(CommandMap::iterator i = Commands.begin();i != Commands.end();++i)
+	{
+	    if ( i->second == command )
+	    {
+		return i->first;
+	    }
+	}
+	return "UNKNOWN_COMMAND";
+    }
+
 } // namespace Irc

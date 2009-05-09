@@ -266,6 +266,12 @@ void Server::OnText(const std::string& text)
 
 	if ( channel.find_first_of("#&") == 0 )
 	{
+	    if ( !appendingChannelNicks_ )
+	    {
+		channelNicks_[channel].clear();
+		appendingChannelNicks_ = true;
+	    }
+
 	    std::stringstream stream(message[3]);
 
 	    boost::upgrade_lock<boost::shared_mutex> lock(channelNicksMutex_);
