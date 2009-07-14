@@ -4,6 +4,7 @@
 #include "../exception.hpp"
 #include "../irc/message.hpp"
 #include "../lua/luafunction.hpp"
+#include "../logging/logger.hpp"
 
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -325,8 +326,8 @@ void MessageGlue::OnEvent(const std::string& server,
     catch ( Exception& )
     {
 	// This is bad, can't really handle so log and rethrow
-	std::cerr<<"Received event with server tag that matches no server"
-		 <<std::endl;
+	Log<<LogLevel::Error
+	   <<"Received event with server tag that matches no server";
 	throw;
     }
 }

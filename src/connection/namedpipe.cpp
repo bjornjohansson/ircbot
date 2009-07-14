@@ -1,5 +1,6 @@
 #include "namedpipe.hpp"
 #include "../exception.hpp"
+#include "../logging/logger.hpp"
 
 NamedPipe::NamedPipe(const std::string& pipeName)
     : pipeFd_(open(pipeName.c_str(), O_RDWR))
@@ -53,7 +54,7 @@ void NamedPipe::OnReceive(const boost::system::error_code& error,
     }
     else
     {
-	std::cerr<<"Named pipe failed: "<<error.message()<<std::endl;
+	Log<<LogLevel::Error<<"Named pipe failed: "<<error.message();
     }
 }
 

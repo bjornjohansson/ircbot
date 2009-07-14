@@ -72,8 +72,8 @@ private:
 
     void RegisterSelfAsReceiver();
 
-    void Log(const std::string& target,
-	     const std::string& text);
+    void LogMessage(const std::string& target,
+		    const std::string& text);
 
     void ManageLogStreams();
 

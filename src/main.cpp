@@ -1,27 +1,27 @@
 #include "client.hpp"
 #include "exception.hpp"
+#include "logging/logger.hpp"
 
 #include <string>
 #include <vector>
-#include <iostream>
 
 int main(int argc, char* argv[])
 {
     if ( argc < 2 )
     {
-	std::cerr<<"You must specify the name of a configuration file"
-		 <<std::endl;
+	Log<<LogLevel::Error<<
+	    "You must specify the name of a configuration file";
 	return 0;
     }
 
     {
-	std::cout<<boost::thread::hardware_concurrency()
-		 <<" concurrent threads supported."<<std::endl;
+	Log<<LogLevel::Info<<boost::thread::hardware_concurrency()
+	   <<" concurrent threads supported.";
 
         Client client(argv[1]);
 
-	std::cout<<"Running client"<<std::endl;
+	Log<<LogLevel::Info<<"Running client";
 	client.Run();
     }
-    std::cout<<"Client exited"<<std::endl;
+    Log<<LogLevel::Info<<"Client exited";
 }

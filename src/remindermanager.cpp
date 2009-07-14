@@ -1,8 +1,8 @@
 #include "remindermanager.hpp"
 #include "exception.hpp"
+#include "logging/logger.hpp"
 
 #include <fstream>
-#include <iostream>
 
 #include <boost/regex.hpp>
 
@@ -185,8 +185,8 @@ const ReminderManager::Reminder& ReminderManager::GetNextReminder() const
 
 void ReminderManager::Timer()
 {
-    std::cout<<"Reminder thread "<<boost::this_thread::get_id()
-	     <<" starting"<<std::endl;
+    Log<<LogLevel::Info<<"Reminder thread "<<boost::this_thread::get_id()
+       <<" starting";
     while ( runTimer_ )
     {
 	boost::unique_lock<boost::mutex> lock(timerMutex_);
@@ -233,8 +233,8 @@ void ReminderManager::Timer()
 	    }
 	}
     }
-    std::cout<<"Reminder thread "<<boost::this_thread::get_id()
-	     <<" ending"<<std::endl;
+    Log<<LogLevel::Info<<"Reminder thread "<<boost::this_thread::get_id()
+       <<" ending";
 }
 
 void ReminderManager::SaveReminders()

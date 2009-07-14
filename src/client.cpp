@@ -5,8 +5,8 @@
 #include "irc/message.hpp"
 #include "irc/server.hpp"
 #include "lua/lua.hpp"
+#include "logging/logger.hpp"
 
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <locale>
@@ -56,7 +56,7 @@ Client::Client(const std::string& config)
     }
     catch ( Exception& e )
     {
-	std::clog<<e.GetMessage()<<std::endl;
+	Log<<LogLevel::Error<<e.GetMessage();
     }
 
     try
@@ -67,7 +67,7 @@ Client::Client(const std::string& config)
     }
     catch ( Exception& )
     {
-	std::cerr<<"Could not open named pipe"<<std::endl;
+	Log<<LogLevel::Error<<"Could not open named pipe";
     }
 }
 
@@ -316,14 +316,14 @@ void Client::ReceivePipeMessage(const std::string& line)
     }
     catch ( Exception& e )
     {
-	std::cout<<"Named pipe failed to send message: "<<e.GetMessage()
-		 <<std::endl;
+	Log<<LogLevel::Error<<"Named pipe failed to send message: "
+	   <<e.GetMessage();
     }
 }
 
-void Client::Log(Server& server,
-		 const std::string& target,
-		 const std::string& text)
+void Client::LogMessage(Server& server,
+			const std::string& target,
+			const std::string& text)
 {
     std::string logFile = config_.GetLogsDirectory();
     if ( logFile.rfind("/") != logFile.size()-1 )
@@ -338,9 +338,7 @@ void Client::Log(Server& server,
     LogStreamMap::iterator stream = logStreams_.find(logFile);
     if ( stream == logStreams_.end() )
     {
-#ifdef DEBUG
-	std::clog<<"Creating '"<<logFile<<"' log stream"<<std::endl;
-#endif
+	Log<<LogLevel::Debug<<"Creating '"<<logFile<<"' log stream";
 	OfstreamPtr newStream(new std::ofstream(logFile.c_str(),
 						std::ios::app));
 	logStreams_[logFile] = OfstreamAndTimestamp(newStream, currentTime);
@@ -363,9 +361,7 @@ void Client::ManageLogStreams()
 	// Only keep logstreams alive for a certain amount of time
 	if ( i->second.second + 30*60 < currentTime )
 	{
-#ifdef DEBUG
-	    std::clog<<"Closing '"<<i->first<<"' log stream"<<std::endl;
-#endif
+	    Log<<LogLevel::Debug<<"Closing '"<<i->first<<"' log stream";
 	    LogStreamMap::iterator next = i;
 	    std::advance(next, 1);
 	    logStreams_.erase(i);

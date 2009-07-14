@@ -2,8 +2,7 @@
 #include "exception.hpp"
 #include "xml/xmldocument.hpp"
 #include "xml/xmlutil.hpp"
-
-#include <iostream>
+#include "logging/logger.hpp"
 
 #include <boost/lexical_cast.hpp>
 
@@ -37,7 +36,7 @@ Config::Config(const std::string& path)
     }
     catch ( Exception& e )
     {
-	std::cerr<<e.GetMessage()<<std::endl;
+	Log<<LogLevel::Error<<e.GetMessage();
     }
 }
 

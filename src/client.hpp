@@ -106,9 +106,9 @@ private:
 
     void ReceivePipeMessage(const std::string& line);
 
-    void Log(Server& server,
-	     const std::string& target,
-	     const std::string& text);
+    void LogMessage(Server& server,
+		    const std::string& target,
+		    const std::string& text);
 
     void ManageLogStreams();
 

@@ -1,10 +1,9 @@
 
 #include "server.hpp"
 #include "message.hpp"
-//#include "../connection/connectionmanager.hpp"
+#include "../logging/logger.hpp"
 #include "../exception.hpp"
 
-#include <iostream>
 #include <sstream>
 #include <fstream>
 
@@ -21,7 +20,7 @@ void EnsureDirectoryExists(const std::string& directory)
     }
     catch ( boost::filesystem::filesystem_error& )
     {
-	std::cerr<<"Could not create directories '"<<directory<<"'"<<std::endl;
+	Log<<LogLevel::Error<<"Could not create directories '"<<directory<<"'";
     }
 }
 
@@ -81,11 +80,9 @@ void Server::Send(const std::string& data)
     }
     catch ( Exception& e )
     {
-	std::cerr<<e.GetMessage()<<std::endl;
+	Log<<LogLevel::Error<<e.GetMessage();
     }
-#ifdef DEBUG
-    std::clog<<host_<<"> "<<data<<std::endl;
-#endif
+    Log<<LogLevel::Debug<<host_<<"> "<<data;
 }
 
 void Server::Receive(Connection& connection, const std::vector<char>& data)
@@ -204,7 +201,7 @@ void Server::SendMessage(const std::string& target, const std::string& message)
 	std::stringstream ss;
 	ss.imbue(std::locale::classic());
 	ss<<time(0)<<" "<<target<<": <"<<GetNick()<<"> "<<scrubbedMessage;
-	Log(target ,ss.str());
+	LogMessage(target ,ss.str());
     }
 }
 
@@ -241,9 +238,7 @@ bool IsIrcNameStatus(const T& v)
 
 void Server::OnText(const std::string& text)
 {
-#ifdef DEBUG
-    std::clog<<host_<<"< "<<text<<std::endl;
-#endif
+    Log<<LogLevel::Debug<<host_<<"< "<<text;
     Irc::Message message(text);
 
     // Log messages
@@ -257,7 +252,7 @@ void Server::OnText(const std::string& text)
 	ss.imbue(std::locale::classic());
 	ss<<time(0)<<" "<<replyTo<<": <"<<from<<"> "
 	  <<CleanMessageForDisplay(from, message[1]);
-	Log(replyTo, ss.str());
+	LogMessage(replyTo, ss.str());
     }
     else if ( message.GetCommand() == Irc::Command::RPL_NAMREPLY &&
 	      message.size() >= 4)
@@ -397,8 +392,8 @@ void Server::RegisterSelfAsReceiver()
 	boost::bind(&Server::OnConnect, this, _1));
 }
 
-void Server::Log(const std::string& target,
-		 const std::string& text)
+void Server::LogMessage(const std::string& target,
+			const std::string& text)
 {
     boost::lock_guard<boost::mutex> lock(logMutex_);
     std::string logFile = GetLogName(target);
@@ -407,9 +402,7 @@ void Server::Log(const std::string& target,
     LogStreamMap::iterator stream = logStreams_.find(logFile);
     if ( stream == logStreams_.end() )
     {
-#ifdef DEBUG
-	std::clog<<"Creating '"<<logFile<<"' log stream"<<std::endl;
-#endif
+	Log<<LogLevel::Debug<<"Creating '"<<logFile<<"' log stream";
 	OfstreamPtr newStream(new std::ofstream(logFile.c_str(),
 						std::ios::app));
 	logStreams_[logFile] = OfstreamAndTimestamp(newStream, currentTime);
@@ -431,9 +424,7 @@ void Server::ManageLogStreams()
 	// Only keep logstreams alive for a certain amount of time
 	if ( i->second.second + 30*60 < currentTime )
 	{
-#ifdef DEBUG
-	    std::clog<<"Closing '"<<i->first<<"' log stream"<<std::endl;
-#endif
+	    Log<<LogLevel::Debug<<"Closing '"<<i->first<<"' log stream";
 	    LogStreamMap::iterator next = i;
 	    std::advance(next, 1),
 	    logStreams_.erase(i);

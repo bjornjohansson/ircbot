@@ -1,14 +1,13 @@
 #include "regexpmanager.hpp"
 #include "regexp.hpp"
 #include "../exception.hpp"
+#include "../logging/logger.hpp"
 
 #include <fstream>
 #include <sstream>
 
 #include <sys/types.h>
 #include <regex.h>
-
-#include <iostream>
 
 RegExpManager::RegExpManager(const std::string& regExpFile,
 			     const std::string& locale)
@@ -27,7 +26,7 @@ RegExpManager::RegExpManager(const std::string& regExpFile,
 	RegExpResult result = AddRegExpImpl(regexp, reply);
 	if ( !result.Success )
 	{
-	    std::cerr<<"'"<<regexp<<"': "<<result.ErrorMessage<<std::endl;
+	    Log<<LogLevel::Error<<"'"<<regexp<<"': "<<result.ErrorMessage;
 	}
     }
 }

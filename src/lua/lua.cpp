@@ -1,8 +1,8 @@
 #include "lua.hpp"
 #include "../exception.hpp"
 #include "luafunction.hpp"
+#include "../logging/logger.hpp"
 
-#include <iostream>
 #include <functional>
 #include <vector>
 
@@ -89,16 +89,17 @@ void Lua::LoadScripts()
 	if ( !boost::filesystem::is_directory(*i) && 
 	     path.rfind(".lua") == path.size()-strlen(".lua") )
 	{
-	    std::cout<<"Loading '"<<path<<"'..."<<std::flush;
+	    Log<<LogLevel::Info<<"Loading '"<<path<<"'...";
 	    try
 	    {
 		LuaFunction function = LoadFile(path);
 		functions.push_back(function);
-		std::cout<<"done"<<std::endl;
+		Log<<LogLevel::Info<<"Successfully loaded '"<<path<<"'";
 	    }
 	    catch ( Exception& e )
 	    {
-		std::cout<<"failed: '"<<e.GetMessage()<<"'"<<std::endl;
+		Log<<LogLevel::Error<<"Loading '"<<path<<"' failed: '"
+		   <<e.GetMessage()<<"'";
 	    }
 	}
     }
@@ -113,7 +114,7 @@ void Lua::LoadScripts()
 	{
 	    std::string message = lua_tostring(lua_, -1);
 	    lua_pop(lua_, -1);
-	    std::cerr<<"Error: "<<message<<std::endl;
+	    Log<<LogLevel::Error<<"Error: "<<message;
 	}
     }
 }

@@ -1,13 +1,11 @@
 #include "connection.hpp"
 #include "../exception.hpp"
 #include "../error.hpp"
+#include "../logging/logger.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <sstream>
-#ifdef DEBUG
-#include <iostream>
-#endif
 
 #include <boost/weak_ptr.hpp>
 #include <boost/lexical_cast.hpp>
@@ -78,7 +76,7 @@ void Connection::Connect(const std::string& host, const unsigned short port)
 	std::string portString = boost::erase_all_regex_copy(
 	    boost::lexical_cast<std::string>(port_),
 	    boost::regex("[^[:digit:]]"));
-	std::clog<<"Connecting to "<<host_<<":"<<portString<<"..."<<std::endl;
+	Log<<LogLevel::Info<<"Connecting to "<<host_<<":"<<portString<<"...";
 	// Create a resolver and a query for the supplied host and port
 	using namespace boost::asio::ip;
 	tcp::resolver resolver(ioService_);
@@ -127,7 +125,7 @@ void Connection::Send(const std::vector<char>& data)
 						   boost::asio::buffer(data));
 	    if ( bytes != data.size() )
 	    {
-		std::cerr<<"Unable to write on connection"<<std::endl;
+		Log<<LogLevel::Error<<"Unable to write on connection";
 		throw Exception(__FILE__, __LINE__,
 				"Unable to send the correct amount of data");
 	    }
@@ -191,6 +189,7 @@ void Connection::OnConnect(const boost::system::error_code& error,
 	    }
 	}
 	CreateReceiver();
+	Log<<LogLevel::Info<<"Connected to "<<host_<<":"<<port_<<"...";
     }
     else if ( endpointIt != boost::asio::ip::tcp::resolver::iterator() )
     {
@@ -202,7 +201,7 @@ void Connection::OnConnect(const boost::system::error_code& error,
     }
     else
     {
-	std::cerr<<"Failed to connect: "<<error.message()<<std::endl;
+	Log<<LogLevel::Error<<"Failed to connect: "<<error.message();
     }
 }
 
@@ -261,15 +260,15 @@ void Connection::Receive(const boost::system::error_code& error,
     }
     else
     {
-	std::cerr<<"Connection::Receive: "<<error.message()<<std::endl;
+	Log<<LogLevel::Error<<"Connection::Receive: "<<error.message();
 	ioService_.stop();
     }
 }
 
 void Connection::Loop()
 {
-    std::cout<<"Connection thread "<<boost::this_thread::get_id()
-	     <<" starting"<<std::endl;
+    Log<<LogLevel::Info<<"Connection thread "<<boost::this_thread::get_id()
+       <<" starting";
 
     boost::unique_lock<boost::mutex> lock(workAvailableMutex_);
 
@@ -285,8 +284,8 @@ void Connection::Loop()
 				boost::posix_time::seconds(RECONNECT_TIMEOUT));
     }
     workAvailable_.notify_all();
-    std::cout<<"Connection thread "<<boost::this_thread::get_id()
-	     <<" ending"<<std::endl;
+    Log<<LogLevel::Info<<"Connection thread "<<boost::this_thread::get_id()
+       <<" ending";
 }
 
 void Connection::CheckConnection()
@@ -295,9 +294,9 @@ void Connection::CheckConnection()
     {
 	if ( IsConnected() && IsTimedOut() )
 	{
-	    std::clog<<"Connection to "<<host_<<":"<<port_<<" timed out after "
-		     <<time(0)-lastReception_<<" seconds, reconnecting"
-		     <<std::endl;
+	    Log<<LogLevel::Info<<"Connection to "<<host_<<":"<<port_
+	       <<" timed out after "<<time(0)-lastReception_
+	       <<" seconds, reconnecting";
 	    Reconnect();
 	}
     }
