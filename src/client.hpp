@@ -99,7 +99,8 @@ private:
     Server& Connect(const std::string& id,
 		    const std::string& host,
 		    unsigned int port,
-		    const std::string& nick);
+		    const std::string& nick,
+		    const std::string& password = std::string());
 
     /** @return true if the message should block continued processing */
     bool OnPrivMsg(Server& server, const Irc::Message& message);

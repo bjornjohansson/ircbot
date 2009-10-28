@@ -43,7 +43,7 @@ Client::Client(const std::string& config)
 	{
 	    serverSettings_[i->GetId()] = *i;
 	    Server& server = Connect(i->GetId(), i->GetHost(), i->GetPort(),
-				     i->GetNick());
+				     i->GetNick(), i->GetPassword());
 
 	    for(Config::Server::ChannelIterator j = i->GetChannelsBegin();
 		j != i->GetChannelsEnd();
@@ -239,7 +239,8 @@ const Server& Client::GetServerFromId(const std::string& id) const
 Server& Client::Connect(const std::string& id,
 			const std::string& host,
 			unsigned int port,
-			const std::string& nick)
+			const std::string& nick,
+			const std::string& password)
 {
     std::string logDirectory = config_.GetLogsDirectory();
     if ( logDirectory.rfind("/") != logDirectory.size()-1 )
@@ -251,7 +252,12 @@ Server& Client::Connect(const std::string& id,
     {
 	boost::upgrade_lock<boost::shared_mutex> lock(serverMutex_);
 
-	ServerPtr server(new Server(id, host, port, nick, logDirectory));
+	ServerPtr server(new Server(id,
+				    host,
+				    port,
+				    nick,
+				    logDirectory,
+				    password));
 	Server::ReceiverHandle handle = server->RegisterReceiver(
 	    boost::bind(&Client::Receive, this, _1, _2));
 	

@@ -17,7 +17,8 @@ public:
 	Server(const std::string& id,
 	       const std::string& host,
 	       unsigned int port,
-	       const std::string& nick);
+	       const std::string& nick,
+	       const std::string& password);
 
 	void AddChannel(const std::string& name, const std::string& key);
 
@@ -25,6 +26,7 @@ public:
 	const std::string& GetHost() const { return host_; }
 	unsigned int GetPort() const { return port_; }
 	const std::string& GetNick() const { return nick_; }
+	const std::string& GetPassword() const { return password_; }
 
 	typedef std::pair<std::string, std::string> ChannelAndKey;
 	typedef std::vector<ChannelAndKey> ChannelContainer;
@@ -38,6 +40,7 @@ public:
 	std::string host_;
 	unsigned int port_;
 	std::string nick_;
+	std::string password_;
 	ChannelContainer channels_;
     };
 

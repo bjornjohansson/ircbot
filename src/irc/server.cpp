@@ -28,11 +28,13 @@ Server::Server(const std::string& id,
 	       const std::string& host, 
 	       unsigned int port,
 	       const std::string& nick,
-	       const std::string& logDirectory)
+	       const std::string& logDirectory,
+	       const std::string& serverPassword)
     : id_(id),
       host_(host),
       logDirectory_(logDirectory),
       nick_(nick),
+      serverPassword_(serverPassword),
       appendingChannelNicks_(false)
 {
     RegisterSelfAsReceiver();
@@ -103,6 +105,10 @@ void Server::Receive(Connection& connection, const std::vector<char>& data)
 
 void Server::OnConnect(Connection& connection)
 {
+    if ( serverPassword_.size() > 0 )
+    {
+	SendPassString(serverPassword_);
+    }
     ChangeNick(nick_);
     SendUserString(nick_, nick_);
 
@@ -174,6 +180,18 @@ void Server::ChangeNick(const std::string& nick)
     Send("NICK "+nick);
     boost::upgrade_lock<boost::shared_mutex> lock(nickMutex_);
     nick_ = nick;
+}
+
+void Server::SendPassString(const std::string& password)
+{
+    if ( password.find(' ') != std::string::npos )
+    {
+	Send(std::string("PASS :")+password);
+    }
+    else
+    {
+	Send(std::string("PASS ")+password);
+    }
 }
 
 void Server::SendUserString(const std::string& user, const std::string name)

@@ -83,11 +83,20 @@ void Config::ParseServers(xmlNode* node)
 		std::string host;
 		int port = 0;
 		std::string nick;
+		std::string password;
 
 		id = GetXmlNodeAttribute(child, "id");
 		host = GetXmlNodeAttribute(child, "host");
 		port = boost::lexical_cast<int>(GetXmlNodeAttribute(child,
 								    "port"));
+		try
+		{
+		    password = GetXmlNodeAttribute(child, "password");
+		}
+		catch (Exception&)
+		{
+		    // Ignore missing password attribute
+		}
 
 		typedef std::pair<std::string, std::string> ChannelAndKey;
 		std::vector<ChannelAndKey> channels;
@@ -130,7 +139,7 @@ void Config::ParseServers(xmlNode* node)
 			}
 		    }
 		}
-		Server server(id, host, port, nick);
+		Server server(id, host, port, nick, password);
 		for(std::vector<ChannelAndKey>::iterator i = channels.begin();
 		    i != channels.end();
 		    ++i)
@@ -157,11 +166,13 @@ Config::Server::Server()
 Config::Server::Server(const std::string& id,
 		       const std::string& host,
 		       unsigned int port,
-		       const std::string& nick)
+		       const std::string& nick,
+		       const std::string& password)
     : id_(id),
       host_(host),
       port_(port),
-      nick_(nick)
+      nick_(nick),
+      password_(password)
 {
 }
 

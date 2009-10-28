@@ -28,7 +28,8 @@ public:
 	   const std::string& host,
 	   unsigned int port,
 	   const std::string& logsDirectory,
-	   const std::string& nick);
+	   const std::string& nick,
+	   const std::string& serverPassword = std::string());
     virtual ~Server();
 
     void Send(const std::string& data);
@@ -52,6 +53,7 @@ public:
     // Irc methods
     void JoinChannel(const std::string& channel, const std::string& key);
     void ChangeNick(const std::string& nick);
+    void SendPassString(const std::string& password);
     void SendUserString(const std::string& user, const std::string name);
     void SendMessage(const std::string& target, const std::string& message);
     void Kick(const std::string& channel,
@@ -96,6 +98,7 @@ private:
     std::string host_;
     std::string logDirectory_;
     std::string nick_;
+    std::string serverPassword_;
     mutable boost::shared_mutex nickMutex_;
 
     typedef boost::shared_ptr<std::ofstream> OfstreamPtr;
