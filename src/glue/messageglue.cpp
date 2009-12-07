@@ -17,7 +17,7 @@ extern "C" {
 #include <lauxlib.h>
 #endif
 
-const int MAX_RECURSIONS = 10;
+const int MAX_RECURSIONS = 30;
 const unsigned int MAX_SEND_LINES = 10;
 const unsigned int MAX_LINE_LENGTH = 420;
 
