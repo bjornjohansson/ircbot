@@ -38,19 +38,11 @@ std::string ForkCommand(const std::string& command)
 	// Child side of the fork
 
 	// Redirect stdout to write-end of pipe
-	if ( close(pipeDescriptors[0]) == -1 )
-	{
-	    exit(1);
-	}
-	if ( dup2(pipeDescriptors[1], STDOUT_FILENO) == -1 )
-	{
-	    exit(1);
-	}
-	if ( dup2(pipeDescriptors[1], STDERR_FILENO) == -1 )
-	{
-	    exit(1);
-	}
-	if ( close(pipeDescriptors[1]) == -1 )
+        if ( close(pipeDescriptors[0]) == -1 ||
+	     close(STDIN_FILENO) == -1 ||
+	     dup2(pipeDescriptors[1], STDOUT_FILENO) == -1 ||
+	     dup2(pipeDescriptors[1], STDERR_FILENO) == -1 ||
+	     close(pipeDescriptors[1]) == -1 )
 	{
 	    exit(1);
 	}
@@ -72,6 +64,7 @@ std::string ForkCommand(const std::string& command)
 	time_t started = time(0);
 
 	int totalOutputSize = 0;
+	bool childDidNotExit = true;
 	while( started+COMMAND_TIMEOUT > time(0) &&
 	       totalOutputSize < MAX_FORK_OUTPUT)
 	{
@@ -101,11 +94,13 @@ std::string ForkCommand(const std::string& command)
 	    int status;
 	    if ( waitpid(childPid,&status,WNOHANG) > 0 )
 	    {
+	        childDidNotExit = false;
 		break;
 	    }
 	}
-	if ( started+COMMAND_TIMEOUT >= time(0) ||
-	     totalOutputSize >= MAX_FORK_OUTPUT )
+	if ( childDidNotExit &&
+	     (started+COMMAND_TIMEOUT <= time(0) ||
+	      totalOutputSize >= MAX_FORK_OUTPUT) )
 	{
 	    // Kill child processgroup, nanosleep gives time for child to die
 	    int status;
@@ -135,6 +130,11 @@ std::string ForkCommand(const std::string& command)
 		;
 	    }
 	}
+    }
+    else
+    {
+        // Fork failed
+        result = GetErrorDescription(errno);
     }
     close(pipeDescriptors[0]);
     return result;
