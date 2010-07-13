@@ -25,7 +25,6 @@ sourceFiles = ['client.cpp'
 	      ,'logging/stdoutsink.cpp'
               ,'lua/lua.cpp'
               ,'lua/luafunction.cpp'
-              ,'main.cpp'
 	      ,'regexp/regexpmanager.cpp'
 	      ,'regexp/regexp.cpp'
 	      ,'remindermanager.cpp'
@@ -35,14 +34,28 @@ sourceFiles = ['client.cpp'
               ,'xml/xmlutil.cpp'
               ]
 
+botFiles = ['main.cpp'
+           ]
+
+testFiles = ['tests/run.cpp'
+            ,'tests/connection_test.cpp'
+            ,'tests/testserver.cpp'
+            ]
+
 libFiles = ['boost_filesystem-mt'
            ,'boost_regex-mt'
            ,'boost_thread-mt'
 	   ,'boost_date_time-mt'
-           ,'lua'
+           ,'lua5.1'
            ]
+
+testLibFiles = ['cppunit'
+               ]
 
 Import('env')
 
-env.Program(target='bot', source = sourceFiles, LIBS=libFiles)
+base_objects = env.StaticObject(sourceFiles)
 
+env.Program('bot', botFiles+base_objects, LIBS=libFiles)
+
+env.Program('unit_tests', testFiles+base_objects, LIBS=libFiles+testLibFiles)

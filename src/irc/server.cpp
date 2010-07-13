@@ -40,36 +40,13 @@ Server::Server(const std::string& id,
     RegisterSelfAsReceiver();
     connection_.Connect(host, port);
 }
-/*
-Server::Server(const Server& rhs)
-{
-    *this = rhs;
-}
-*/
+
 Server::~Server()
 {
-    // Do not detroy this class while it's performing callbacks
+    // Do not destroy this class while it's performing callbacks
     boost::lock_guard<boost::mutex> lock(callbackMutex_);
 }
 
-/*
-Server& Server::operator=(const Server& rhs)
-{
-    receivers_ = rhs.receivers_;
-    connection_ = rhs.connection_;
-    receiveBuffer_ = rhs.receiveBuffer_;
-    id_ = rhs.id_;
-    host_ = rhs.host_;
-    nick_ = rhs.nick_;
-    logDirectory_ = rhs.logDirectory_;
-    channels_ = rhs.channels_;
-    channelNicks_ = rhs.channelNicks_;
-    appendingChannelNicks_ = rhs.appendingChannelNicks_;
-
-    RegisterSelfAsReceiver();
-    return *this;
-}
-*/
 void Server::Send(const std::string& data)
 {
     std::vector<char> buffer;

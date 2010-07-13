@@ -9,7 +9,7 @@ class LogManager
 public:
     static LogManager& Instance();
 
-    LogSink& GetSink(const LogLevel::LogLevel logLevel)
+    LogSinkPtr GetSink(const LogLevel::LogLevel logLevel)
     {
 	switch(logLevel)
 	{
@@ -37,6 +37,6 @@ private:
     LogManager(const LogManager&);
     LogManager& operator=(const LogManager&);
 
-    StdOutSink stdOutSink_;
-    NullSink nullSink_;
+	LogSinkPtr stdOutSink_;
+	LogSinkPtr nullSink_;
 };

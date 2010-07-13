@@ -20,9 +20,6 @@ class Connection : boost::noncopyable
 {
 public:
     Connection();
-    /**
-     * @throw Exception if unable to connect
-     */
     Connection(const std::string& host, const unsigned short port);
     virtual ~Connection();
 
@@ -94,6 +91,7 @@ private:
     thread_safe<bool> connected_;
     boost::mutex sendMutex_;
     std::auto_ptr<boost::thread> thread_;
+    boost::mutex constructorMutex_;
 
     bool run_;
     boost::condition_variable workAvailable_;

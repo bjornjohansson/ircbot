@@ -26,6 +26,7 @@ Connection::Connection()
     , run_(true)
       
 {
+    boost::lock_guard<boost::mutex> lock(constructorMutex_);
     thread_.reset(new boost::thread(boost::bind(&Connection::Loop, this)));
 }
 
@@ -37,12 +38,14 @@ Connection::Connection(const std::string& host, const unsigned short port)
     , connected_(false)
     , run_(true)
 {
+    boost::lock_guard<boost::mutex> lock(constructorMutex_);
     thread_.reset(new boost::thread(boost::bind(&Connection::Loop, this)));
     Connect(host, port);
 }
 
 Connection::~Connection()
 {
+    boost::lock_guard<boost::mutex> lock(constructorMutex_);
     {
 	boost::lock_guard<boost::mutex> lock(socketMutex_);
 	boost::system::error_code error;

@@ -8,6 +8,8 @@ LogManager& LogManager::Instance()
 }
 
 LogManager::LogManager()
+	: stdOutSink_(new StdOutSink())
+	, nullSink_(new NullSink())
 {
     
 

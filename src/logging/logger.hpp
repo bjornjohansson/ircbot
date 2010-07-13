@@ -13,7 +13,7 @@ public:
     class LoggerProxy
     {
     public:
-	explicit LoggerProxy(LogSink& sink)
+	explicit LoggerProxy(LogSinkPtr sink)
 	    : impl_(new LoggerProxyImpl(sink))
 	{
 	}
@@ -28,24 +28,24 @@ public:
 	class LoggerProxyImpl : boost::noncopyable
 	{
 	public:
-	    explicit LoggerProxyImpl(LogSink& sink)
+	    explicit LoggerProxyImpl(LogSinkPtr sink)
 		: sink_(sink)
 	    {
 	    }
 	    
 	    virtual ~LoggerProxyImpl()
 	    {
-		sink_<<buffer_.str();
+		    (*sink_)<<buffer_.str();
 	    }
 	    
 	    template<class T>
 	    LoggerProxyImpl& operator<<(const T& rhs)
 	    {
-		buffer_<<rhs;
-		return *this;
+		    buffer_<<rhs;
+		    return *this;
 	    }
 	private:
-	    LogSink& sink_;
+	    LogSinkPtr sink_;
 	    std::stringstream buffer_;
 	};
 

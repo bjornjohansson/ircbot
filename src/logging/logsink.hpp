@@ -1,4 +1,5 @@
 #pragma once
+#include "logsink.fwd.hpp"
 
 #include <string>
 
