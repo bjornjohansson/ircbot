@@ -237,7 +237,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
    print("callback received: "..reply)   
 
    if string.find(reply, "\\N") or 0 > 0 then
-      local nicks = GetChannelNicks(RegExp_Channel, RegExp_Server)
+      local nicks = GetChannelNicks(true, RegExp_Channel, RegExp_Server)
       reply = RegExp_ReplaceEscapeCode(reply, "\\N", table.concat(nicks, "|"))
    end
 

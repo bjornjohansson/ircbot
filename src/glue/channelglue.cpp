@@ -108,15 +108,21 @@ int ChannelGlue::GetChannelNicks(lua_State* lua)
 {
 	UnicodeString server;
 	std::string channel;
+	bool asUnicode = false;
 	int argumentCount = lua_gettop(lua);
 	if (argumentCount >= 1)
 	{
-		CheckArgument(lua, 1, LUA_TSTRING);
-		channel = lua_tostring(lua, 1);
+		CheckArgument(lua, 1, LUA_TBOOLEAN);
+		asUnicode = lua_toboolean(lua, 1);
 		if (argumentCount >= 2)
 		{
 			CheckArgument(lua, 2, LUA_TSTRING);
-			server = ConvertString(lua_tostring(lua, 2));
+			channel = lua_tostring(lua, 2);
+			if (argumentCount >= 3)
+			{
+				CheckArgument(lua, 3, LUA_TSTRING);
+				server = ConvertString(lua_tostring(lua, 3));
+			}
 		}
 	}
 
@@ -131,7 +137,10 @@ int ChannelGlue::GetChannelNicks(lua_State* lua)
 	for (std::set<std::string>::const_iterator nick = nicks.begin(); nick
 			!= nicks.end(); ++nick)
 	{
-		lua_pushstring(lua, nick->c_str());
+		if (asUnicode)
+			lua_pushstring(lua, AsUtf8(ConvertString(*nick)).c_str());
+		else
+			lua_pushstring(lua, nick->c_str());
 		int currentMainIndex = std::distance(nicks.begin(), nick) + 1;
 		lua_rawseti(lua, mainTableIndex, currentMainIndex);
 	}
