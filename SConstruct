@@ -16,7 +16,7 @@ if int(debug):
    env.Append(CPPDEFINES = ['DEBUG'])
    build_dir = 'build/debug'
 elif int(release):
-   env.Append(CCFLAGS = ['-g', '-O3'])
+   env.Append(CCFLAGS = ['-pipe', '-O3', '-fomit-frame-pointer', '-march=native'])
    build_dir = 'build/release'
 else:
    print "Specify a build, release=1 or debug=1"
