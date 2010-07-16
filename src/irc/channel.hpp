@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unicode/unistr.h>
+#include <string>
 
 class Server;
 
