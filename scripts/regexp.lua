@@ -272,7 +272,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
    end
 
    print("before runcode "..reply)
-   reply = string.gsub(reply, "(¤)([^¤]*)(¤)", RegExp_RunCode)
+   reply = string.gsub(reply, "(Â¤)(.*)(Â¤)", RegExp_RunCode)
    print("after runcode "..reply)
    reply = RegExp_CheckCommands(reply)
    if string.find(reply, "\\e") == 1 or string.find(reply, "\\E") == 1 then

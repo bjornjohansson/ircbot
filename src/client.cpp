@@ -167,7 +167,7 @@ UnicodeString Client::GetLastLine(const std::string& nick, long& timestamp,
 	UnicodeString result;
 	if (res == 0)
 	{
-		result = &buffer[0];
+	  result = ConvertString(&buffer[0]);
 	}
 	else
 	{
