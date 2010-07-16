@@ -4,40 +4,41 @@
 #include "../exception.hpp"
 
 #include <boost/bind.hpp>
+#include <converter.hpp>
 
-class BotGlue : public Glue
+class BotGlue: public Glue
 {
 public:
-    BotGlue();
+	BotGlue();
 
-    int GetMyNick(lua_State* lua);
+	int GetMyNick(lua_State* lua);
 private:
-    void AddFunctions();
+	void AddFunctions();
 };
 
 BotGlue botGlue;
 
 BotGlue::BotGlue()
 {
-    GlueManager::Instance().RegisterGlue(this);
+	GlueManager::Instance().RegisterGlue(this);
 }
 
 void BotGlue::AddFunctions()
 {
-    AddFunction(boost::bind(&BotGlue::GetMyNick, this, _1), "GetMyNick");
+	AddFunction(boost::bind(&BotGlue::GetMyNick, this, _1), "GetMyNick");
 }
 
 int BotGlue::GetMyNick(lua_State* lua)
 {
-    std::string server;
-    if ( lua_gettop(lua) >= 1 )
-    {
-	CheckArgument(lua, 1, LUA_TSTRING);
-	server = lua_tostring(lua, 1);
-    }
+	UnicodeString server;
+	if (lua_gettop(lua) >= 1)
+	{
+		CheckArgument(lua, 1, LUA_TSTRING);
+		server = ConvertString(lua_tostring(lua, 1));
+	}
 
-    std::string nick = client_->GetNick(server);
+	UnicodeString nick = client_->GetNick(server);
 
-    lua_pushstring(lua, nick.c_str());
-    return 1;
+	lua_pushstring(lua, AsUtf8(nick).c_str());
+	return 1;
 }

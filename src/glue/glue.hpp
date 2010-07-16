@@ -6,6 +6,8 @@
 #include <utility>
 #include <list>
 
+#include <unicode/unistr.h>
+
 #ifdef LUA_EXTERN
 extern "C" {
 #include <lua.h>
@@ -28,7 +30,7 @@ protected:
     void CheckArgument(lua_State* lua, int argumentNumber, int expectedType);
 
     typedef boost::function<int (lua_State*)> GlueFunction;
-    void AddFunction(GlueFunction, const std::string& name);
+    void AddFunction(GlueFunction, const UnicodeString& name);
 
     typedef std::list<Lua::LuaFunctionHandle> FunctionHandleContainer;
     FunctionHandleContainer functionHandles_;

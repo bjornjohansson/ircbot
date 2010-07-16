@@ -1,16 +1,17 @@
 #pragma once
 
+#include <unicode/unistr.h>
 #include <string>
 
 class Exception
 {
 public:
-    Exception(const std::string& location, int line, const std::string& msg);
+    Exception(const std::string& location, int line, const UnicodeString& msg);
 
-    const std::string& GetMessage() const { return message_; }
+    const UnicodeString& GetMessage() const { return message_; }
 
 private:
-    std::string location_;
+    UnicodeString location_;
     int line_;
-    std::string message_;
+    UnicodeString message_;
 };

@@ -7,93 +7,91 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-class ReminderGlue : public Glue
+#include <converter.hpp>
+
+class ReminderGlue: public Glue
 {
 public:
-    ReminderGlue();
+	ReminderGlue();
 
-    void Reset(boost::shared_ptr<Lua> lua,
-	       Client* client);
+	void Reset(boost::shared_ptr<Lua> lua, Client* client);
 
-    int AddReminder(lua_State* lua);
-    int FindReminder(lua_State* lua);
+	int AddReminder(lua_State* lua);
+	int FindReminder(lua_State* lua);
 private:
-    void AddFunctions();
+	void AddFunctions();
 
-    boost::shared_ptr<ReminderManager> reminderManager_;
+	boost::shared_ptr<ReminderManager> reminderManager_;
 };
 
 ReminderGlue reminderGlue;
 
 ReminderGlue::ReminderGlue()
 {
-    GlueManager::Instance().RegisterGlue(this);
+	GlueManager::Instance().RegisterGlue(this);
 }
 
 void ReminderGlue::AddFunctions()
 {
-    AddFunction(boost::bind(&ReminderGlue::AddReminder, this, _1),
-		"ReminderAdd");
-    AddFunction(boost::bind(&ReminderGlue::FindReminder, this, _1),
-		"ReminderFind");
+	AddFunction(boost::bind(&ReminderGlue::AddReminder, this, _1),
+			"ReminderAdd");
+	AddFunction(boost::bind(&ReminderGlue::FindReminder, this, _1),
+			"ReminderFind");
 }
 
-void ReminderGlue::Reset(boost::shared_ptr<Lua> lua,
-			 Client* client)
+void ReminderGlue::Reset(boost::shared_ptr<Lua> lua, Client* client)
 {
-    Glue::Reset(lua, client);
-    reminderManager_.reset(new ReminderManager(
-			       client_->GetConfig().GetRemindersFilename(),
-			       boost::bind(&Client::SendMessage,
-					   client_, _1, _2, _3)));
+	Glue::Reset(lua, client);
+	reminderManager_.reset(new ReminderManager(
+			client_->GetConfig().GetRemindersFilename(), boost::bind(
+					&Client::SendMessage, client_, _1, _2, _3)));
 }
 
 int ReminderGlue::AddReminder(lua_State* lua)
 {
-    CheckArgument(lua, 1, LUA_TNUMBER);
-    CheckArgument(lua, 2, LUA_TSTRING);
-    CheckArgument(lua, 3, LUA_TSTRING);
-    CheckArgument(lua, 4, LUA_TSTRING);
+	CheckArgument(lua, 1, LUA_TNUMBER);
+	CheckArgument(lua, 2, LUA_TSTRING);
+	CheckArgument(lua, 3, LUA_TSTRING);
+	CheckArgument(lua, 4, LUA_TSTRING);
 
-    time_t seconds = lua_tointeger(lua, 1);
-    const char* server = lua_tostring(lua, 2);
-    const char* channel = lua_tostring(lua, 3);
-    const char* message = lua_tostring(lua, 4);
+	time_t seconds = lua_tointeger(lua, 1);
+	UnicodeString server = ConvertString(lua_tostring(lua, 2));
+	std::string channel = lua_tostring(lua, 3);
+	UnicodeString message = ConvertString(lua_tostring(lua, 4));
 
-    reminderManager_->CreateReminder(seconds, server, channel, message);
+	reminderManager_->CreateReminder(seconds, server, channel, message);
 
-    return 0;
+	return 0;
 }
 
 int ReminderGlue::FindReminder(lua_State* lua)
 {
-    CheckArgument(lua, 1, LUA_TSTRING);
-    CheckArgument(lua, 2, LUA_TSTRING);
-    CheckArgument(lua, 3, LUA_TSTRING);
+	CheckArgument(lua, 1, LUA_TSTRING);
+	CheckArgument(lua, 2, LUA_TSTRING);
+	CheckArgument(lua, 3, LUA_TSTRING);
 
-    std::string server = lua_tostring(lua, 1);
-    std::string channel = lua_tostring(lua, 2);
-    std::string searchString = lua_tostring(lua, 3);
+	UnicodeString server = ConvertString(lua_tostring(lua, 1));
+	UnicodeString channel = ConvertString(lua_tostring(lua, 2));
+	UnicodeString searchString = ConvertString(lua_tostring(lua, 3));
 
-    ReminderManager::ReminderIteratorRange reminders =
-	reminderManager_->FindReminders(server, channel, searchString);
+	ReminderManager::ReminderIteratorRange reminders =
+			reminderManager_->FindReminders(server, channel, searchString);
 
-    int reminderCount = std::distance(reminders.first, reminders.second);
-    lua_createtable(lua, reminderCount, 0);
-    int mainTableIndex = lua_gettop(lua);
+	int reminderCount = std::distance(reminders.first, reminders.second);
+	lua_createtable(lua, reminderCount, 0);
+	int mainTableIndex = lua_gettop(lua);
 
-    for(ReminderManager::ReminderIterator reminder = reminders.first;
-	reminder != reminders.second;
-	++reminder)
-    {
-	lua_createtable(lua, 2, 0);
-	int subTableIndex = lua_gettop(lua);
-	lua_pushinteger(lua, reminder->Timestamp-time(0));
-	lua_rawseti(lua, subTableIndex, 1);
-	lua_pushstring(lua, reminder->Message.c_str());
-	lua_rawseti(lua, subTableIndex, 2);
-	int currentMainIndex = std::distance(reminders.first, reminder) + 1;
-	lua_rawseti(lua, mainTableIndex, currentMainIndex);
-    }
-    return 1;
+	for (ReminderManager::ReminderIterator reminder = reminders.first; reminder
+			!= reminders.second; ++reminder)
+	{
+		lua_createtable(lua, 2, 0);
+		int subTableIndex = lua_gettop(lua);
+		lua_pushinteger(lua, reminder->Timestamp - time(0));
+		lua_rawseti(lua, subTableIndex, 1);
+		lua_pushstring(lua, AsUtf8(reminder->Message).c_str());
+		lua_rawseti(lua, subTableIndex, 2);
+		int currentMainIndex = std::distance(reminders.first, reminder) + 1;
+		lua_rawseti(lua, mainTableIndex, currentMainIndex);
+	}
+	return 1;
 }

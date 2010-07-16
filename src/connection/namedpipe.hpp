@@ -7,13 +7,15 @@
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 
+#include <unicode/unistr.h>
+
 class NamedPipe : boost::noncopyable
 {
 public:
     /**
      * @throw Exception if pipe can not be opened
      */
-    explicit NamedPipe(const std::string& pipeName);
+    explicit NamedPipe(const UnicodeString& pipeName);
     ~NamedPipe();
 
     typedef boost::function<void (const std::string&)> Receiver;

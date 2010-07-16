@@ -4,7 +4,9 @@
 
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/regex.hpp>
+#include <boost/regex/icu.hpp>
+
+#include <unicode/unistr.h>
 
 class RegExp
 {
@@ -12,18 +14,18 @@ public:
     /**
      * @throw Exception if the regexp cannot be compiled
      */
-    RegExp(const std::string& regExp,
-	   const std::string& reply,
+    RegExp(const UnicodeString& regExp,
+	   const UnicodeString& reply,
 	   const std::locale& locale = std::locale());
 
-    std::string FindMatchAndReply(const std::string& message) const;
+    UnicodeString FindMatchAndReply(const UnicodeString& message) const;
     
-    const std::string& GetRegExp() const;
-    const std::string& GetReply() const;
+    const UnicodeString& GetRegExp() const;
+    const UnicodeString& GetReply() const;
 
-    void SetReply(const std::string& reply);
+    void SetReply(const UnicodeString& reply);
 private:
-    std::string regExp_, reply_;
+    UnicodeString regExp_, reply_;
 
-    boost::regex pattern_;
+    boost::u32regex pattern_;
 };

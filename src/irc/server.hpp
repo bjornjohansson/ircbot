@@ -6,6 +6,9 @@
 #include "../connection/connection.hpp"
 #include "message.fwd.hpp"
 
+#include <charsetdetector.hpp>
+#include <unicode/unistr.h>
+
 #include <string>
 #include <vector>
 #include <list>
@@ -24,19 +27,19 @@ public:
     /**
      * @throw Exception if unable to connect
      */
-    Server(const std::string& id,
-	   const std::string& host,
+    Server(const UnicodeString& id,
+	   const UnicodeString& host,
 	   unsigned int port,
 	   const std::string& logsDirectory,
-	   const std::string& nick,
-	   const std::string& serverPassword = std::string());
+	   const UnicodeString& nick,
+	   const UnicodeString& serverPassword = UnicodeString());
     virtual ~Server();
 
     void Send(const std::string& data);
 
-    const std::string& GetId() const;
-    const std::string& GetHostName() const;
-    const std::string& GetNick() const;
+    const UnicodeString& GetId() const;
+    const UnicodeString& GetHostName() const;
+    const UnicodeString& GetNick() const;
 
     typedef ServerReceiver Receiver;
     typedef ServerReceiverHandle ReceiverHandle;
@@ -51,14 +54,14 @@ public:
     std::string GetLogName(const std::string& target) const;
 
     // Irc methods
-    void JoinChannel(const std::string& channel, const std::string& key);
-    void ChangeNick(const std::string& nick);
-    void SendPassString(const std::string& password);
-    void SendUserString(const std::string& user, const std::string name);
-    void SendMessage(const std::string& target, const std::string& message);
+    void JoinChannel(const std::string& channel, const UnicodeString& key);
+    void ChangeNick(const UnicodeString& nick);
+    void SendPassString(const UnicodeString& password);
+    void SendUserString(const UnicodeString& user, const UnicodeString& name);
+    void SendMessage(const std::string& target, const UnicodeString& message);
     void Kick(const std::string& channel,
 	      const std::string& user,
-	      const std::string& message);
+	      const UnicodeString& message);
 
     /**
      * @throw Exception if channel not found
@@ -94,11 +97,11 @@ private:
     std::string receiveBuffer_;
     boost::mutex callbackMutex_;
 
-    std::string id_;
-    std::string host_;
+    UnicodeString id_;
+    UnicodeString host_;
     std::string logDirectory_;
-    std::string nick_;
-    std::string serverPassword_;
+    UnicodeString nick_;
+    UnicodeString serverPassword_;
     mutable boost::shared_mutex nickMutex_;
 
     typedef boost::shared_ptr<std::ofstream> OfstreamPtr;
@@ -107,7 +110,7 @@ private:
     LogStreamMap logStreams_;
     boost::mutex logMutex_;
 
-    typedef std::map<std::string, std::string> ChannelKeyMap;
+    typedef std::map<std::string, UnicodeString> ChannelKeyMap;
     ChannelKeyMap channels_;
     mutable boost::shared_mutex channelsMutex_;
 
@@ -115,6 +118,8 @@ private:
     ChannelNicksContainer channelNicks_;
     bool appendingChannelNicks_;
     boost::shared_mutex channelNicksMutex_;
+
+    CharsetDetector detector_;
 };
 
 

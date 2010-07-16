@@ -7,6 +7,8 @@
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <converter.hpp>
+
 class Logger
 {
 public:
@@ -42,6 +44,12 @@ public:
 	    LoggerProxyImpl& operator<<(const T& rhs)
 	    {
 		    buffer_<<rhs;
+		    return *this;
+	    }
+
+	    LoggerProxyImpl& operator<<(const UnicodeString& rhs)
+	    {
+		    buffer_<<AsUtf8(rhs);
 		    return *this;
 	    }
 	private:

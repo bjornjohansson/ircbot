@@ -14,19 +14,21 @@
 #include <boost/thread.hpp>
 #include <boost/utility.hpp>
 
+#include <unicode/unistr.h>
+
 const std::size_t RECEIVE_BUFFER_SIZE = 1024;
 
 class Connection : boost::noncopyable
 {
 public:
     Connection();
-    Connection(const std::string& host, const unsigned short port);
+    Connection(const UnicodeString& host, const unsigned short port);
     virtual ~Connection();
 
     /**
      * @throw Exception if unable to connect
      */
-    void Connect(const std::string& host, const unsigned short port);
+    void Connect(const UnicodeString& host, const unsigned short port);
 
     /**
      * @throw Exception if unable to reconnect
@@ -78,7 +80,7 @@ private:
     boost::mutex socketMutex_;
     boost::array<char, RECEIVE_BUFFER_SIZE> buffer_;
 
-    std::string host_;
+    UnicodeString host_;
     unsigned short port_;
     typedef std::list<boost::weak_ptr<Receiver> > ReceiverContainer;
     ReceiverContainer receivers_;

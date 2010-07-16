@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <unicode/unistr.h>
 
 class Server;
 
@@ -10,7 +10,7 @@ namespace Irc
 class Channel
 {
 public:
-    Channel(Server& server, const std::string& name, const std::string& key);
+    Channel(Server& server, const std::string& name, const UnicodeString& key);
     virtual ~Channel();
 
 private:
@@ -20,7 +20,7 @@ private:
     Server& server_;
 
     std::string name_;
-    std::string key_;
+    UnicodeString key_;
     bool isJoined_;
 };
 

@@ -9,25 +9,23 @@
 
 GlueManager& GlueManager::Instance()
 {
-    static GlueManager instance_;
-    return instance_;
+	static GlueManager instance_;
+	return instance_;
 }
 
 void GlueManager::RegisterGlue(Glue* glue)
 {
-    glues_.push_back(glue);
+	glues_.push_back(glue);
 }
 
 void GlueManager::Reset(boost::shared_ptr<Lua> lua, Client* client)
 {
-    lua_ = lua;
+	lua_ = lua;
 
-    for(GlueContainer::iterator glue = glues_.begin();
-	glue != glues_.end();
-	++glue)
-    {
-	(*glue)->Reset(lua, client);
-    }
+	for (GlueContainer::iterator glue = glues_.begin(); glue != glues_.end(); ++glue)
+	{
+		(*glue)->Reset(lua, client);
+	}
 }
 
 GlueManager::GlueManager()

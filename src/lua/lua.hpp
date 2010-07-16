@@ -11,6 +11,8 @@
 #include <boost/weak_ptr.hpp>
 #include <boost/thread.hpp>
 
+#include <unicode/unistr.h>
+
 #ifdef LUA_EXTERN
 extern "C" {
 #include <lua.h>
@@ -23,14 +25,14 @@ extern "C" {
 class Lua
 {
 public:
-    Lua(const std::string& scriptsDirectory);
+    Lua(const UnicodeString& scriptsDirectory);
     virtual ~Lua();
 
     void LoadScripts();
 
     typedef boost::function<int (lua_State*)> LuaFunc;
     typedef boost::shared_ptr<LuaFunc> LuaFunctionHandle;
-    LuaFunctionHandle RegisterFunction(const std::string& name,
+    LuaFunctionHandle RegisterFunction(const UnicodeString& name,
 				       LuaFunc f,
 				       bool replace = true);
 
@@ -51,12 +53,12 @@ private:
     static boost::shared_mutex callTimeMutex_;
 
     lua_State* lua_;
-    std::string scriptsDirectory_;
+    UnicodeString scriptsDirectory_;
 
     typedef boost::weak_ptr<LuaFunc> LuaFunctionWeakPtr;
     typedef std::pair<LuaFunctionWeakPtr,lua_State*> FunctionStatePair;
-    typedef std::map<std::string, FunctionStatePair> LuaFunctionsMap;
+    typedef std::map<UnicodeString, FunctionStatePair> LuaFunctionsMap;
     static LuaFunctionsMap luaFunctions_;
-    typedef std::list<std::string> StringContainer;
+    typedef std::list<UnicodeString> StringContainer;
     StringContainer myRegisteredFunctions_;
 };

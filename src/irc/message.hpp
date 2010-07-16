@@ -3,9 +3,10 @@
 #include "prefix.hpp"
 #include "command.hpp"
 
-#include <string>
 #include <vector>
 #include <boost/regex.hpp>
+#include <unicode/unistr.h>
+#include <converter.hpp>
 
 namespace Irc
 {
@@ -33,17 +34,22 @@ public:
     const_iterator end() const { return parameters_.end(); }
 
     template<class T>
-    const std::string& operator[](T index) const { return parameters_[index]; }
+    std::string operator[](T index) const { return parameters_[index]; }
     ParameterContainer::size_type size() const { return parameters_.size(); }
 
     const std::string& GetTarget() const;
     const std::string& GetText() const;
     const std::string& GetReplyTo() const;
 
+    bool IsCtcp() const { return isCtcp_; }
+
 private:
+    void CheckCtcp();
+
     Prefix prefix_;
     Command::Command command_;
     ParameterContainer parameters_;
+    bool isCtcp_;
 
     static boost::regex dataRegex_;
 };

@@ -11,26 +11,28 @@
 #include <sys/types.h>
 #include <regex.h>
 
+#include <unicode/unistr.h>
+
 class RegExpManager
 {
 public:
     struct RegExpResult
     {
 	bool Success;
-	std::string ErrorMessage;
+	UnicodeString ErrorMessage;
     };
 
-    RegExpManager(const std::string& regExpFile, const std::string& locale);
+    RegExpManager(const UnicodeString& regExpFile, const UnicodeString& locale);
 
     /**
      * Add regexp and save changes (no need to call SaveRegExps())
      */
-    RegExpResult AddRegExp(const std::string& regexp,
-			   const std::string& reply);
+    RegExpResult AddRegExp(const UnicodeString& regexp,
+			   const UnicodeString& reply);
     /**
      * Remove regexp and save changes (no need to call SaveRegExps())
      */
-    bool RemoveRegExp(const std::string& regexp);
+    bool RemoveRegExp(const UnicodeString& regexp);
 
     bool SaveRegExps() const;
 
@@ -39,8 +41,8 @@ public:
      * @param 2 original message
      * @param 3 matching regexp
      */
-    typedef boost::function<std::string (const std::string&,
-					 const std::string&,
+    typedef boost::function<UnicodeString (const UnicodeString&,
+					 const UnicodeString&,
 					 const RegExp&)> Operation;
 
     /**
@@ -49,7 +51,7 @@ public:
      * If the operation functions returns a non-zero length string
      * then that string is returned and the matching is stopped.
      */
-    std::string FindMatchAndReply(const std::string& message,
+    UnicodeString FindMatchAndReply(const UnicodeString& message,
 				  Operation operation) const;
 
     typedef std::vector<RegExp> RegExpContainer;
@@ -57,37 +59,37 @@ public:
     typedef boost::shared_container_iterator<RegExpContainer> RegExpIterator;
     typedef std::pair<RegExpIterator,RegExpIterator> RegExpIteratorRange;
 
-    RegExpIteratorRange FindMatches(const std::string& message) const;
-    RegExpIteratorRange FindRegExps(const std::string& searchString) const;
+    RegExpIteratorRange FindMatches(const UnicodeString& message) const;
+    RegExpIteratorRange FindRegExps(const UnicodeString& searchString) const;
 
     /**
      * Change reply and save changes (no need to call SaveRegExps())
      */
-    bool ChangeReply(const std::string& regexp, const std::string& reply);
+    bool ChangeReply(const UnicodeString& regexp, const UnicodeString& reply);
     /**
      * Change regexp and save changes (no need to call SaveRegExps())
      */
-    RegExpResult ChangeRegExp(const std::string& regexp,
-			      const std::string& newRegexp);
+    RegExpResult ChangeRegExp(const UnicodeString& regexp,
+			      const UnicodeString& newRegexp);
 
-    bool MoveUp(const std::string& regexp);
-    bool MoveDown(const std::string& regexp);
+    bool MoveUp(const UnicodeString& regexp);
+    bool MoveDown(const UnicodeString& regexp);
 
     // Decode regexp from its non-space syntax
-    std::string Decode(const std::string& regexp) const;
+    UnicodeString Decode(const UnicodeString& regexp) const;
     // Encode regexp into its non-space syntax
-    std::string Encode(const std::string& regexp) const;
+    UnicodeString Encode(const UnicodeString& regexp) const;
 
 private:
 
     /**
      * Adds a regexp without updating the regexp file
      */
-    RegExpResult AddRegExpImpl(const std::string& regexp,
-			       const std::string& reply);
+    RegExpResult AddRegExpImpl(const UnicodeString& regexp,
+			       const UnicodeString& reply);
 
     std::locale locale_;
-    std::string regExpFile_;
+    UnicodeString regExpFile_;
 
     RegExpContainer regExps_;
 };

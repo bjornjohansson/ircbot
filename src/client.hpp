@@ -12,13 +12,15 @@
 #include <map>
 #include <set>
 
+#include <unicode/unistr.h>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 
 class Client
 {
 public:
-    Client(const std::string& config);
+    Client(const UnicodeString& config);
 
     void Run();
 
@@ -28,52 +30,52 @@ public:
      * @throw Exception if no matching server found
      */
     void JoinChannel(const std::string& channel,
-		     const std::string& key = std::string(),
-		     const std::string& serverId = std::string());
+		     const UnicodeString& key = UnicodeString(),
+		     const UnicodeString& serverId = UnicodeString());
 
     void Kick(const std::string& user,
-	      const std::string& message,
+	      const UnicodeString& message,
 	      const std::string& channel = std::string(),
-	      const std::string& server = std::string());
+	      const UnicodeString& server = UnicodeString());
 
     /**
      * @throw Exception if no matching server found
      */
-    void ChangeNick(const std::string& nick,
-		    const std::string& serverId = std::string());
+    void ChangeNick(const UnicodeString& nick,
+		    const UnicodeString& serverId = UnicodeString());
     /**
      * @throw Exception if no matching server found
      */
-    void SendMessage(const std::string& message,
+    void SendMessage(const UnicodeString& message,
 		     const std::string& target = std::string(),
-		     const std::string& serverId = std::string());
+		     const UnicodeString& serverId = UnicodeString());
 
     /**
      * @throw Exception if no matching server found
      */
     std::string GetLogName(const std::string& target = std::string(),
-			   const std::string& serverId = std::string()) const;
+			   const UnicodeString& serverId = UnicodeString()) const;
     /**
      * @throw Exception if no matching server found
      * @param timestamp becomes -1 if no last line can be found
      */
-    std::string GetLastLine(const std::string& nick,
+    UnicodeString GetLastLine(const std::string& nick,
 			    long& timestamp,
 			    const std::string& channel = std::string(),
-			    const std::string& serverId = std::string()) const;
+			    const UnicodeString& serverId = UnicodeString()) const;
     /**
      * @throw Exception if no matching server found
      */
-    const std::string& GetNick(const std::string& serverId = std::string());
+    const UnicodeString& GetNick(const UnicodeString& serverId = UnicodeString());
 
     /**
      * @throw Exception if no matching server or channel found
      */
     const std::set<std::string>& GetChannelNicks(const std::string& channel = std::string(),
-						 const std::string& serverid = std::string());
+						 const UnicodeString& serverid = UnicodeString());
 
     // void (server, message)
-    typedef boost::function<void (const std::string&,
+    typedef boost::function<void (const UnicodeString&,
 				  const Irc::Message&)> EventReceiver;
     typedef boost::shared_ptr<EventReceiver> EventReceiverHandle;
     EventReceiverHandle RegisterForEvent(const Irc::Command::Command& event,
@@ -86,21 +88,21 @@ private:
     /**
      * @throw Exception if no matching server found
      */
-    Server& GetServerFromId(const std::string& id);
+    Server& GetServerFromId(const UnicodeString& id);
 
     /**
      * @throw Exception if no matching server found
      */
-    const Server& GetServerFromId(const std::string& id) const;
+    const Server& GetServerFromId(const UnicodeString& id) const;
 
     /**
      * @throw Exception if unable to connect
      */
-    Server& Connect(const std::string& id,
-		    const std::string& host,
+    Server& Connect(const UnicodeString& id,
+		    const UnicodeString& host,
 		    unsigned int port,
-		    const std::string& nick,
-		    const std::string& password = std::string());
+		    const UnicodeString& nick,
+		    const UnicodeString& password = UnicodeString());
 
     /** @return true if the message should block continued processing */
     bool OnPrivMsg(Server& server, const Irc::Message& message);
@@ -108,8 +110,8 @@ private:
     void ReceivePipeMessage(const std::string& line);
 
     void LogMessage(Server& server,
-		    const std::string& target,
-		    const std::string& text);
+		    const UnicodeString& target,
+		    const UnicodeString& text);
 
     void ManageLogStreams();
 
@@ -117,17 +119,17 @@ private:
 
     typedef boost::shared_ptr<Server> ServerPtr;
     typedef std::pair<ServerPtr, ServerReceiverHandle> ServerAndHandle;
-    typedef std::map<std::string,ServerAndHandle> ServerHandleMap;
+    typedef std::map<UnicodeString,ServerAndHandle> ServerHandleMap;
     ServerHandleMap servers_;
     mutable boost::shared_mutex serverMutex_;
     Config config_;
 
-    typedef std::map<std::string, Config::Server> ServerIdMap;
+    typedef std::map<UnicodeString, Config::Server> ServerIdMap;
     ServerIdMap serverSettings_;
 
     typedef boost::shared_ptr<std::ofstream> OfstreamPtr;
     typedef std::pair<OfstreamPtr,time_t> OfstreamAndTimestamp;
-    typedef std::map<std::string, OfstreamAndTimestamp> LogStreamMap;
+    typedef std::map<UnicodeString, OfstreamAndTimestamp> LogStreamMap;
     LogStreamMap logStreams_;
 
     typedef boost::weak_ptr<EventReceiver> EventReceiverPtr;
@@ -144,7 +146,7 @@ private:
     boost::shared_ptr<NamedPipe> namedPipe_;
     NamedPipe::ReceiverHandle pipeReceiver_;
 
-    std::string currentServer_;
+    UnicodeString currentServer_;
     std::string currentReplyTo_;
     bool run_;
 };

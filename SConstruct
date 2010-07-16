@@ -3,6 +3,7 @@ vars.AddVariables(('CPPPATH', 'Include path for preprocessor.', ''))
 vars.AddVariables(('CPPFLAGS', 'Flags for compiler.', ''))
 vars.AddVariables(('LINKFLAGS', 'Flags for linker.', ''))
 vars.AddVariables(('CPPDEFINES', 'Definitions for the preprocessor.', ''))
+vars.AddVariables(('LIBPATH', 'Include path for linker.', ''))
 
 env = Environment(variables = vars)
 

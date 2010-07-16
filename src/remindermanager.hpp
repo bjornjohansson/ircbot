@@ -10,67 +10,68 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/function.hpp>
 
+#include <unicode/unistr.h>
+
 class ReminderManager
 {
 public:
-    typedef boost::function<void (const std::string&,
-				  const std::string&,
-				  const std::string&)> ReminderCallback;
+	typedef boost::function<void(const UnicodeString&, const std::string&,
+			const UnicodeString&)> ReminderCallback;
 
-    struct Reminder
-    {
-	time_t Timestamp;
-	std::string Server;
-	std::string Channel;
-	std::string Message;
+	struct Reminder
+	{
+		time_t Timestamp;
+		UnicodeString Server;
+		std::string Channel;
+		UnicodeString Message;
 
-	bool operator<(const Reminder& rhs) const;
-    };
+		bool operator<(const Reminder& rhs) const;
+	};
 
-    ReminderManager(const std::string& remindersFile, 
-		    ReminderCallback callback);
+	ReminderManager(const UnicodeString& remindersFile,
+			ReminderCallback callback);
 
-    virtual ~ReminderManager();
+	virtual ~ReminderManager();
 
-    void CreateReminder(time_t inNumSeconds,
-			const std::string& server,
-			const std::string& channel,
-			const std::string& message);
-    
-    typedef std::vector<Reminder> DueRemindersContainer;
-    typedef boost::shared_container_iterator<DueRemindersContainer> ReminderIterator;
-    typedef std::pair<ReminderIterator,ReminderIterator> ReminderIteratorRange;
+	void CreateReminder(time_t inNumSeconds, const UnicodeString& server,
+			const std::string& channel, const UnicodeString& message);
 
-    ReminderIteratorRange GetDueReminders(bool erase = true);
+	typedef std::vector<Reminder> DueRemindersContainer;
+	typedef boost::shared_container_iterator<DueRemindersContainer>
+			ReminderIterator;
+	typedef std::pair<ReminderIterator, ReminderIterator> ReminderIteratorRange;
 
-    /**
-     * @throw Exception if searchString is an invalid regular expression
-     */
-    ReminderIteratorRange FindReminders(const std::string& server, 
-					const std::string& channel,
-					const std::string& searchString) const;
+	ReminderIteratorRange GetDueReminders(bool erase = true);
 
-    void CleanDueReminders();
+	/**
+	 * @throw Exception if searchString is an invalid regular expression
+	 */
+	ReminderIteratorRange
+			FindReminders(const UnicodeString& server,
+					const UnicodeString& channel,
+					const UnicodeString& searchString) const;
 
-    /**
-     * @return The reminder that is closest in the future
-     * @throw Exception if there is no upcoming reminder
-     */
-    const Reminder& GetNextReminder() const;
+	void CleanDueReminders();
+
+	/**
+	 * @return The reminder that is closest in the future
+	 * @throw Exception if there is no upcoming reminder
+	 */
+	const Reminder& GetNextReminder() const;
 
 private:
-    void SaveReminders();
-    void ReadReminders();
+	void SaveReminders();
+	void ReadReminders();
 
-    void Timer();
-    
-    typedef std::multiset<Reminder> ReminderContainer;
-    ReminderContainer reminders_;
-    std::string remindersFile_;
-    boost::mutex timerMutex_;
-    mutable boost::shared_mutex reminderMutex_;
-    boost::condition_variable timerCondition_;
-    std::auto_ptr<boost::thread> timerThread_;
-    bool runTimer_;
-    ReminderCallback reminderCallback_;
+	void Timer();
+
+	typedef std::multiset<Reminder> ReminderContainer;
+	ReminderContainer reminders_;
+	UnicodeString remindersFile_;
+	boost::mutex timerMutex_;
+	mutable boost::shared_mutex reminderMutex_;
+	boost::condition_variable timerCondition_;
+	std::auto_ptr<boost::thread> timerThread_;
+	bool runTimer_;
+	ReminderCallback reminderCallback_;
 };
