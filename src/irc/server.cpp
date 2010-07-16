@@ -231,7 +231,8 @@ void Server::OnText(const std::string& text)
 		ss.imbue(std::locale::classic());
 		ss << time(0) << " " << replyTo << ": <" << from << "> "
 				<< CleanMessageForDisplay(from, message[1]);
-		LogMessage(replyTo, ss.str());
+		UnicodeString logMessage = ConvertString(ss.str());
+		LogMessage(replyTo, AsUtf8(logMessage));
 	}
 	else if (message.GetCommand() == Irc::Command::RPL_NAMREPLY
 			&& message.size() >= 4)
