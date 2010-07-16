@@ -234,15 +234,11 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
    local matches = 1
    local loops = 0
 
-   print("callback received: "..reply)   
-
    if string.find(reply, "\\N") or 0 > 0 then
       local nicks = GetChannelNicks(true, RegExp_Channel, RegExp_Server)
       reply = RegExp_ReplaceEscapeCode(reply, "\\N", table.concat(nicks, "|"))
    end
 
-   print("after replacing \\N "..reply)
- 
    if (reply:find("\\e") or 0) ~= 1 and (reply:find("\\E") or 0 ) ~= 1 then
       while matches ~= 0 and loops < 10 do
 	 matches = 0
@@ -252,11 +248,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
       end
    end
 
-   print("after replacing {|} "..reply)
-
    reply = RegExp_ReplaceEscapeCode(reply, "\\n", RegExp_FromNick)
-
-   print("after replacing \\n "..reply)
 
    reply = RegExp_ReplaceEscapeCode(reply, "\\b", GetMyNick(RegExp_Server))
    reply = RegExp_ReplaceEscapeCode(reply, "\\s", RegExp_Channel)
@@ -271,9 +263,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
       return ""
    end
 
-   print("before runcode "..reply)
    reply = string.gsub(reply, "(¤)(.*)(¤)", RegExp_RunCode)
-   print("after runcode "..reply)
    reply = RegExp_CheckCommands(reply)
    if string.find(reply, "\\e") == 1 or string.find(reply, "\\E") == 1 then
       reply = reply:gsub("\\\\", "\\")
@@ -295,8 +285,6 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
       return ""
    end
 
-   print("callback returning "..reply)
-
    return reply
 end
 
@@ -316,17 +304,13 @@ function RegExp_OnMessage(server, fromNick, fromUser, fromHost, to, message)
    end
 
    local reply = RegExpMatchAndReply(message, RegExp_ModifyReply)
-   print("From C++ "..reply)
    if #reply > 0 then
       local rows = StringSplit(reply, "\n")
       if #rows >= 1 then
-	 print(rows)
 	 return unpack(rows)
       end
-      print("Returning "..reply)
       return reply
    end
-   print("Ooops?")
 end
 
 
