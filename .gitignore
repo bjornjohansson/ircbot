@@ -6,3 +6,6 @@ regexps
 reminders
 rundir
 *~
+.cproject
+.project
+Debug
