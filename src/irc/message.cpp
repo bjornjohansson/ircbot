@@ -8,7 +8,8 @@
 boost::regex Irc::Message::dataRegex_;
 
 Irc::Message::Message(const std::string& data)
-	: isCtcp_(false)
+	: command_(Command::UNKNOWN_COMMAND)
+	, isCtcp_(false)
 {
 	try
 	{
