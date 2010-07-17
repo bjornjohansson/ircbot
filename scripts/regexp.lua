@@ -248,7 +248,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
       end
    end
 
-   reply = RegExp_ReplaceEscapeCode(reply, "\\n", RegExp_FromNick)
+   reply = RegExp_ReplaceEscapeCode(reply, "\\n", ConvertString(RegExp_FromNick))
 
    reply = RegExp_ReplaceEscapeCode(reply, "\\b", GetMyNick(RegExp_Server))
    reply = RegExp_ReplaceEscapeCode(reply, "\\s", RegExp_Channel)
