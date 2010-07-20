@@ -179,7 +179,7 @@ void Server::SendMessage(const std::string& target, const UnicodeString& message
 	{
 		Send("PRIVMSG " + target + " :" + scrubbedMessage);
 
-		scrubbedMessage = CleanMessageForDisplay(AsUtf8(GetNick()), scrubbedMessage);
+		scrubbedMessage = CleanMessageForDisplay(AsUtf8(GetNick()), scrubbedMessage, scrubbedMessage.find('\1') == 0);
 
 		std::stringstream ss;
 		ss.imbue(std::locale::classic());
@@ -230,7 +230,7 @@ void Server::OnText(const std::string& text)
 		std::stringstream ss;
 		ss.imbue(std::locale::classic());
 		ss << time(0) << " " << replyTo << ": <" << from << "> "
-				<< CleanMessageForDisplay(from, message[1]);
+		   << CleanMessageForDisplay(from, message[1], message.IsCtcp());
 		UnicodeString logMessage = ConvertString(ss.str());
 		LogMessage(replyTo, AsUtf8(logMessage));
 	}
@@ -409,15 +409,16 @@ void Server::ManageLogStreams()
 }
 
 std::string Server::CleanMessageForDisplay(const std::string& nick,
-		const std::string& message)
+                                           const std::string& message,
+                                           bool isCtcp)
 {
 	std::string result = message;
 
-	const std::string ctcpAction = "\1ACTION";
-	std::string::size_type pos = std::string::npos;
-	if (result.find(ctcpAction) == 0)
+	const std::string ctcpAction = "ACTION";
+	if (isCtcp && result.find(ctcpAction) == 0)
 	{
 		result.replace(0, ctcpAction.size(), "* " + nick);
+		std::string::size_type pos = std::string::npos;
 		if ((pos = result.rfind("\1")) != std::string::npos)
 		{
 			result.erase(pos);

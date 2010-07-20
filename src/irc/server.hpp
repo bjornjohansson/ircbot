@@ -83,7 +83,8 @@ private:
     void ManageLogStreams();
 
     std::string CleanMessageForDisplay(const std::string& nick,
-				       const std::string& message);
+                                       const std::string& message,
+                                       bool isCtcp);
 
     typedef std::list<boost::weak_ptr<Receiver> > ReceiverContainer;
     ReceiverContainer receivers_;
