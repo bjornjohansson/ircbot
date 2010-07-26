@@ -40,14 +40,9 @@ Client::Client(const UnicodeString& config) :
 				!= config_.GetServersEnd(); ++i)
 		{
 			serverSettings_[i->GetId()] = *i;
-			Server& server = Connect(i->GetId(), i->GetHost(), i->GetPort(),
-					i->GetNick(), i->GetPassword());
+			Connect(i->GetId(), i->GetHost(), i->GetPort(),
+			        i->GetNick(), i->GetPassword());
 
-			for (Config::Server::ChannelIterator j = i->GetChannelsBegin(); j
-					!= i->GetChannelsEnd(); ++j)
-			{
-				server.JoinChannel(j->first, j->second);
-			}
 		}
 		run_ = true;
 	} catch (Exception& e)
@@ -84,6 +79,21 @@ void Client::Receive(Server& server, const Irc::Message& message)
 	if (command == Irc::Command::PING)
 	{
 		server.Send("PONG " + AsUtf8(server.GetHostName()));
+	}
+	else if (command == Irc::Command::RPL_WELCOME)
+	{
+		for (Config::ServerIterator i = config_.GetServersBegin(); i
+				!= config_.GetServersEnd(); ++i)
+		{
+			if (i->GetId() == server.GetId())
+			{
+				for (Config::Server::ChannelIterator j = i->GetChannelsBegin(); j
+					     != i->GetChannelsEnd(); ++j)
+				{
+					server.JoinChannel(j->first, j->second);
+				}
+			}
+		}
 	}
 	else if (command == Irc::Command::PRIVMSG && message.size() >= 2
 			&& !OnPrivMsg(server, message))

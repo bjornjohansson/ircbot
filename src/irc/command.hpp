@@ -89,6 +89,7 @@ namespace Command
 	ERR_NOOPERHOST,
 	ERR_UMODEUNKNOWNFLAG,
 	ERR_USERSDONTMATCH,
+	RPL_WELCOME,
 	RPL_NONE,
 	RPL_USERHOST,
 	RPL_ISON,
@@ -247,6 +248,7 @@ namespace Command
     ("491", Command::ERR_NOOPERHOST)
     ("501", Command::ERR_UMODEUNKNOWNFLAG)
     ("502", Command::ERR_USERSDONTMATCH)
+    ("001", Command::RPL_WELCOME)
     ("300", Command::RPL_NONE)
     ("302", Command::RPL_USERHOST)
     ("303", Command::RPL_ISON)
