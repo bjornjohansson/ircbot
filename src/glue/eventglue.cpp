@@ -62,7 +62,7 @@ EventGlue::EventGlue()
 	GlueManager::Instance().RegisterGlue(this);
 }
 
-void EventGlue::Reset(boost::shared_ptr<Lua> lua, Client* client)
+void EventGlue::Reset(boost::shared_ptr<Lua>, Client*)
 {
 
 }

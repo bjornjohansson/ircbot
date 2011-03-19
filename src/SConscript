@@ -60,4 +60,4 @@ base_objects = env.StaticObject(sourceFiles)
 
 env.Program('bot', botFiles+base_objects, LIBS=libFiles)
 
-env.Program('unit_tests', testFiles+base_objects, LIBS=libFiles+testLibFiles)
+#env.Program('unit_tests', testFiles+base_objects, LIBS=libFiles+testLibFiles)

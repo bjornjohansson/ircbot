@@ -1,4 +1,4 @@
-CPPFLAGS = '`xml2-config --cflags` -Wall -pedantic-errors -I/usr/include/lua5.1'
+CPPFLAGS = '`xml2-config --cflags` -I/usr/include/lua5.1 -Wfatal-errors -Wswitch-default -Wswitch-enum -Wunused-parameter -Wfloat-equal -Wundef -Wstrict-null-sentinel -pedantic -Wall -Wextra'
 LINKFLAGS = '`xml2-config --libs` `icu-config --ldflags`'
 CPPDEFINES = ['LUA_EXTERN']
 CPPPATH = ['../../../icuwrap/src']
