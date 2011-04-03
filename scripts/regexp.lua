@@ -281,7 +281,7 @@ local function RegExp_ModifyReply(subbedReply, message, regexp, orgReply)
    end
 
    if reply:find("\\k") == 1 then
-      Kick(RegExp_FromNick, reply:sub(3))
+      Kick(RegExp_FromNick, reply:sub(3), RegExp_Channel)
       return ""
    end
 
