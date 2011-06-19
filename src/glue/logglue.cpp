@@ -87,6 +87,7 @@ int LogGlue::GetLastLine(lua_State* lua)
 
 	lua_pushstring(lua, AsUtf8(logLine).c_str());
 	lua_pushinteger(lua, time(0) - timestamp);
-	return 2;
+	lua_pushinteger(lua, timestamp);
+	return 3;
 }
 
