@@ -17,7 +17,7 @@ const boost::regex::flag_type REGEX_FLAGS = boost::regex::extended
 const int MAX_SUB_MATCHES = 10;
 
 RegExp::RegExp(const UnicodeString& regExp, const UnicodeString& reply,
-		const std::locale& locale) :
+		const std::locale&) :
 	regExp_(regExp), reply_(reply)
 {
 	try
@@ -37,9 +37,9 @@ RegExp::RegExp(const UnicodeString& regExp, const UnicodeString& reply,
 
 void ReplaceIndex(UnicodeString& result,
                   const UnicodeString& index,
-                  const ustring& match,
-                  boost::function<ustring (const ustring&)> modifier
-                  = boost::function<ustring (const ustring&)>())
+                  const UnicodeString& match,
+                  boost::function<UnicodeString (const UnicodeString&)> modifier
+                  = boost::function<UnicodeString (const UnicodeString&)>())
 {
 	for (int32_t pos = result.indexOf(index);
 	     pos != -1;
@@ -47,16 +47,14 @@ void ReplaceIndex(UnicodeString& result,
 	{
 		if (pos == 0 || result[pos - 1] != '\\')
 		{
-			ustring replacement = match;
+			UnicodeString replacement = match;
 			if (modifier)
 			{
 				replacement = modifier(replacement);
 			}
-			result.replace(pos,
-			               index.length(),
-			               reinterpret_cast<const uint16_t*>(replacement.c_str()));
+			result.replace(pos, index.length(), replacement);
 			
-			pos += replacement.size() - 1;
+			pos += replacement.length() - 1;
 		}
 		else if (pos > 0 && result[pos - 1] == '\\')
 		{
@@ -65,25 +63,28 @@ void ReplaceIndex(UnicodeString& result,
 	}
 }
 
-void EscapeCharacter(ustring& input, uint16_t character)
+void EscapeCharacter(UnicodeString& input,
+                     UChar character,
+                     const UnicodeString& quote)
 {
-	size_t pos = 0;
-	while ((pos=input.find(character, pos)) != ustring::npos)
+	int32_t quoteLength = quote.length();
+	for (int32_t pos = input.indexOf(character);
+	     pos != -1;
+	     pos = input.indexOf(character, pos))
 	{
-		input.insert(pos, 1, L'\\');
-		pos += 2;
+		input.insert(pos, quote);
+		pos += quoteLength + 1;
 	}
-	
 }
 
-ustring QuoteBashString(const ustring& input)
+UnicodeString QuoteBashString(const UnicodeString& input)
 {
-	ustring result = input;
-	EscapeCharacter(result, L'\\');
-	EscapeCharacter(result, L'"');
-	EscapeCharacter(result, L'$');
-	EscapeCharacter(result, L'`');
-	
+	UnicodeString result = input;
+	EscapeCharacter(result, L'\\', "\\");
+	EscapeCharacter(result, L'"', "\\");
+	EscapeCharacter(result, L'$', "\\");
+	EscapeCharacter(result, L'`', "\\\\");
+
 	return result;
 }
 
@@ -104,9 +105,10 @@ UnicodeString RegExp::FindMatchAndReply(const UnicodeString& message) const
 				quoted << '@' << i;
 				UnicodeString unquotedIndex = AsUnicode(unquoted.str());
 				UnicodeString quotedIndex = AsUnicode(quoted.str());
-
-				ReplaceIndex(result, unquotedIndex, matches[i].str());
-				ReplaceIndex(result, quotedIndex, matches[i].str(), &QuoteBashString);
+				UnicodeString match(matches[i].str().c_str());
+				
+				ReplaceIndex(result, unquotedIndex, match);
+				ReplaceIndex(result, quotedIndex, match, &QuoteBashString);
 			}
 		}
 	}
