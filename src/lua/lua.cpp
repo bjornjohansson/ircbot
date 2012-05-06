@@ -83,7 +83,7 @@ void Lua::LoadScripts()
 	for (boost::filesystem::directory_iterator i(AsUtf8(scriptsDirectory_)); i
 			!= boost::filesystem::directory_iterator(); ++i)
 	{
-		std::string path = i->string();
+		std::string path = i->path().string();
 		if (!boost::filesystem::is_directory(*i) && path.rfind(".lua")
 				== path.size() - strlen(".lua"))
 		{
