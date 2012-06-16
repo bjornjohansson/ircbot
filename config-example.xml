@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config version="1">
+  <general>
+    <scripts>scripts/</scripts>
+    <logs>logs/</logs>
+    <regexps>regexps/</regexps>
+    <reminders>reminders/</reminders>
+	<namedpipe>ircpipe</namedpipe>
+	<locale>sv_SE.UTF-8</locale>
+  </general>
+  <servers>
+    <server id="myserver" host="irc.myserver.com" port="6667">
+      <nick>ircbot</nick>
+      <channels>
+        <channel>#test</channel>
+      </channels>
+    </server>
+  </servers>
+</config>
