@@ -16,6 +16,10 @@ external sources through a named pipe to a particular user or channel. This
 is useful for things like cron jobs that can provide external input, such
 as RSS feeds.
 
+The bot also runs things through Lua scripts. Lua scripts can subscribe
+to events and take action based on them. Triggers can also directly execute
+Lua code.
+
 The bot itself is not really very useful, instead it's whatever support
 built around it using triggers and the named pipe that can make it useful.
 
