@@ -1,0 +1,21 @@
+This is an IRC-bot suitable for use on private networks with trusted users.
+The bot has something called "triggers". A trigger is a regular expression
+and a reply. For each line of input on an IRC channel each trigger will
+examine the line using the regular expression. If there is a match the reply
+will be invoked. The reply can be just a text reply, execution of a command,
+triggering another trigger and so on. The fact that a reply may include
+execution of a command means that this is the biggest security hole in the
+history of mankind. Do not run this on untrusted networks or with untrusted
+users.
+
+There is also something called "reminders". The bot keeps track of times
+when it should produce a particular output.
+
+Another feature is input through a named pipe. Messages can be sent from
+external sources through a named pipe to a particular user or channel. This
+is useful for things like cron jobs that can provide external input, such
+as RSS feeds.
+
+The bot itself is not really very useful, instead it's whatever support
+built around it using triggers and the named pipe that can make it useful.
+
