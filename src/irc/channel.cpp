@@ -1,5 +1,5 @@
 #include "channel.hpp"
-#include "server.hpp"
+#include "../server.hpp"
 
 #include <converter.hpp>
 

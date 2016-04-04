@@ -1,8 +1,7 @@
 #pragma once
 
-#include "irc/server.fwd.hpp"
-#include "irc/prefix.fwd.hpp"
-#include "irc/message.fwd.hpp"
+#include "server.fwd.hpp"
+#include "message.fwd.hpp"
 #include "irc/command.hpp"
 #include "config.hpp"
 #include "lua/lua.fwd.hpp"
@@ -24,45 +23,45 @@ public:
 
     void Run();
 
-    void Receive(Server& server, const Irc::Message& message);
+    void Receive(Server& server, const Message& message);
 
     /**
      * @throw Exception if no matching server found
      */
     void JoinChannel(const std::string& channel,
-		     const UnicodeString& key = UnicodeString(),
-		     const UnicodeString& serverId = UnicodeString());
+             const UnicodeString& key = UnicodeString(),
+             const UnicodeString& serverId = UnicodeString());
 
     void Kick(const std::string& user,
-	      const UnicodeString& message,
-	      const std::string& channel = std::string(),
-	      const UnicodeString& server = UnicodeString());
+          const UnicodeString& message,
+          const std::string& channel = std::string(),
+          const UnicodeString& server = UnicodeString());
 
     /**
      * @throw Exception if no matching server found
      */
     void ChangeNick(const UnicodeString& nick,
-		    const UnicodeString& serverId = UnicodeString());
+            const UnicodeString& serverId = UnicodeString());
     /**
      * @throw Exception if no matching server found
      */
     void SendMessage(const UnicodeString& message,
-		     const std::string& target = std::string(),
-		     const UnicodeString& serverId = UnicodeString());
+             const std::string& target = std::string(),
+             const UnicodeString& serverId = UnicodeString());
 
     /**
      * @throw Exception if no matching server found
      */
     std::string GetLogName(const std::string& target = std::string(),
-			   const UnicodeString& serverId = UnicodeString()) const;
+               const UnicodeString& serverId = UnicodeString()) const;
     /**
      * @throw Exception if no matching server found
      * @param timestamp becomes -1 if no last line can be found
      */
     UnicodeString GetLastLine(const std::string& nick,
-			    long& timestamp,
-			    const std::string& channel = std::string(),
-			    const UnicodeString& serverId = UnicodeString()) const;
+                long& timestamp,
+                const std::string& channel = std::string(),
+                const UnicodeString& serverId = UnicodeString()) const;
     /**
      * @throw Exception if no matching server found
      */
@@ -72,18 +71,18 @@ public:
      * @throw Exception if no matching server or channel found
      */
     const std::set<std::string>& GetChannelNicks(const std::string& channel = std::string(),
-						 const UnicodeString& serverid = UnicodeString());
+                         const UnicodeString& serverid = UnicodeString());
 
     // void (server, message)
     typedef boost::function<void (const UnicodeString&,
-				  const Irc::Message&)> EventReceiver;
+                  const Message&)> EventReceiver;
     typedef boost::shared_ptr<EventReceiver> EventReceiverHandle;
-    EventReceiverHandle RegisterForEvent(const Irc::Command::Command& event,
-					 EventReceiver receiver);
+    EventReceiverHandle RegisterForEvent(EventReceiver receiver);
 
     const Config& GetConfig() const;
 
 private:
+    typedef boost::shared_ptr<Server> ServerPtr;
 
     /**
      * @throw Exception if no matching server found
@@ -98,26 +97,33 @@ private:
     /**
      * @throw Exception if unable to connect
      */
-    Server& Connect(const UnicodeString& id,
-		    const UnicodeString& host,
-		    unsigned int port,
-		    const UnicodeString& nick,
-		    const UnicodeString& password = UnicodeString());
+    Server& Connect(Config::Server::Type serverType,
+                    const UnicodeString& id,
+                    const UnicodeString& host,
+                    unsigned int port,
+                    const UnicodeString& nick,
+                    const UnicodeString& password = UnicodeString());
+
+    ServerPtr CreateServer(Config::Server::Type serverType,
+                           const UnicodeString& id,
+                           const UnicodeString& host,
+                           unsigned int port,
+                           const UnicodeString& nick,
+                           const UnicodeString& password = UnicodeString());
 
     /** @return true if the message should block continued processing */
-    bool OnPrivMsg(Server& server, const Irc::Message& message);
+    bool OnPrivMsg(Server& server, const Message& message);
 
     void ReceivePipeMessage(const std::string& line);
 
     void LogMessage(Server& server,
-		    const UnicodeString& target,
-		    const UnicodeString& text);
+            const UnicodeString& target,
+            const UnicodeString& text);
 
     void ManageLogStreams();
 
     void InitLua();
 
-    typedef boost::shared_ptr<Server> ServerPtr;
     typedef std::pair<ServerPtr, ServerReceiverHandle> ServerAndHandle;
     typedef std::map<UnicodeString,ServerAndHandle> ServerHandleMap;
     ServerHandleMap servers_;
@@ -134,9 +140,7 @@ private:
 
     typedef boost::weak_ptr<EventReceiver> EventReceiverPtr;
     typedef std::list<EventReceiverPtr> EventReceiverContainer;
-    typedef boost::unordered_map<Irc::Command::Command,EventReceiverContainer>
-        EventReceiverMap;
-    EventReceiverMap eventReceivers_;
+    EventReceiverContainer eventReceivers_;
     boost::shared_mutex receiverMutex_;
 
     boost::shared_ptr<Lua> lua_;

@@ -6,5 +6,5 @@
 
 class Server;
 
-typedef boost::function<void (Server&, const Irc::Message&)> ServerReceiver;
+typedef boost::function<void (Server&, const Message&)> ServerReceiver;
 typedef boost::shared_ptr<ServerReceiver> ServerReceiverHandle;

@@ -1,4 +1,0 @@
-namespace Irc
-{
-class Message;
-}
