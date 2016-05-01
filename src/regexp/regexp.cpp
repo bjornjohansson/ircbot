@@ -1,5 +1,6 @@
 #include "regexp.hpp"
 #include "../exception.hpp"
+#include "../logging/logger.hpp"
 
 #include <vector>
 #include <sstream>
@@ -95,22 +96,35 @@ UnicodeString RegExp::FindMatchAndReply(const UnicodeString& message) const
 	if (!pattern_.empty())
 	{
 		boost::u16match matches;
-		if (boost::u32regex_search(message, matches, pattern_))
-		{
-			result = reply_;
-			for (unsigned int i = 0; i < matches.size(); ++i)
-			{
-				std::stringstream unquoted, quoted;
-				unquoted << '\\' << i;
-				quoted << '@' << i;
-				UnicodeString unquotedIndex = AsUnicode(unquoted.str());
-				UnicodeString quotedIndex = AsUnicode(quoted.str());
-				UnicodeString match(matches[i].str().c_str());
-				
-				ReplaceIndex(result, unquotedIndex, match);
-				ReplaceIndex(result, quotedIndex, match, &QuoteBashString);
-			}
-		}
+        try
+        {
+            if (boost::u32regex_search(message, matches, pattern_))
+            {
+                result = reply_;
+                for (unsigned int i = 0; i < matches.size(); ++i)
+                {
+                    std::stringstream unquoted, quoted;
+                    unquoted << '\\' << i;
+                    quoted << '@' << i;
+                    UnicodeString unquotedIndex = AsUnicode(unquoted.str());
+                    UnicodeString quotedIndex = AsUnicode(quoted.str());
+                    UnicodeString match(matches[i].str().c_str());
+
+                    ReplaceIndex(result, unquotedIndex, match);
+                    ReplaceIndex(result, quotedIndex, match, &QuoteBashString);
+                }
+            }
+        }
+        catch (std::out_of_range& e)
+        {
+            // out_of_range is thrown when the message contains invalid
+            // unicode code points. Don't crash when that happens, just log
+            // it and move on.
+            Log << LogLevel::Error << "Exception caught matching regexp '"
+                << AsUtf8(regExp_) << "' against message '" << AsUtf8(message)
+                << "': " << e.what();
+            return UnicodeString();
+        }
 	}
 	return result;
 }
