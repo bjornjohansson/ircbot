@@ -117,7 +117,7 @@ int MessageGlue::Send(lua_State* lua)
         std::string target;
         int argumentCount = lua_gettop(lua);
         CheckArgument(lua, 1, LUA_TSTRING);
-        message = ConvertString(lua_tostring(lua, 1));
+        message = AsUnicode(lua_tostring(lua, 1));
         if (argumentCount >= 2)
         {
             CheckArgument(lua, 2, LUA_TSTRING);
@@ -125,7 +125,7 @@ int MessageGlue::Send(lua_State* lua)
             if (argumentCount >= 3)
             {
                 CheckArgument(lua, 3, LUA_TSTRING);
-                server = ConvertString(lua_tostring(lua, 3));
+                server = AsUnicode(lua_tostring(lua, 3));
             }
         }
         client_->SendMessage(message, target, server);
@@ -155,7 +155,7 @@ int MessageGlue::RecurseMessage(lua_State* lua)
 
     int argumentCount = lua_gettop(lua);
     CheckArgument(lua, 1, LUA_TSTRING);
-    message = ConvertString(lua_tostring(lua, 1));
+    message = AsUnicode(lua_tostring(lua, 1));
     if (argumentCount >= 2)
     {
         CheckArgument(lua, 2, LUA_TSTRING);
@@ -167,15 +167,15 @@ int MessageGlue::RecurseMessage(lua_State* lua)
             if (argumentCount >= 4)
             {
                 CheckArgument(lua, 4, LUA_TSTRING);
-                fromUser = ConvertString(lua_tostring(lua, 4));
+                fromUser = AsUnicode(lua_tostring(lua, 4));
                 if (argumentCount >= 5)
                 {
                     CheckArgument(lua, 5, LUA_TSTRING);
-                    fromHost = ConvertString(lua_tostring(lua, 5));
+                    fromHost = AsUnicode(lua_tostring(lua, 5));
                     if (argumentCount >= 6)
                     {
                         CheckArgument(lua, 6, LUA_TSTRING);
-                        server = ConvertString(lua_tostring(lua, 6));
+                        server = AsUnicode(lua_tostring(lua, 6));
                     }
                 }
             }
@@ -238,7 +238,7 @@ int MessageGlue::RegisterBlockingCall(lua_State* lua)
         directOnly = lua_toboolean(lua, 3);
     }
 
-    UnicodeString matchString = ConvertString(lua_tostring(lua, 1));
+    UnicodeString matchString = AsUnicode(lua_tostring(lua, 1));
 
     try
     {
@@ -269,9 +269,9 @@ void MessageGlue::OnEvent(const UnicodeString& server,
     const Prefix& from = message.GetPrefix();
     const std::string& to = message.GetTarget();
     const std::string& fromNick = from.GetNick();
-    UnicodeString fromUser = ConvertString(from.GetUser());
-    UnicodeString fromHost = ConvertString(from.GetHost());
-    UnicodeString text = ConvertString(message.GetText());
+    UnicodeString fromUser = AsUnicode(from.GetUser());
+    UnicodeString fromHost = AsUnicode(from.GetHost());
+    UnicodeString text = AsUnicode(message.GetText());
     const std::string& replyTo = message.GetReplyTo();
 
     lastServer_ = server;
@@ -409,7 +409,7 @@ MessageGlue::StringContainerPtr MessageGlue::CallEventHandler(
                 const char* message = lua_tostring(lua, resultNumber);
                 if (message)
                 {
-                    result->push_back(ConvertString(message));
+                    result->push_back(AsUnicode(message));
                 }
                 else if (lua_type(lua, resultNumber) == LUA_TTABLE)
                 {
@@ -421,7 +421,7 @@ MessageGlue::StringContainerPtr MessageGlue::CallEventHandler(
                         message = lua_tostring(lua, -1);
                         if (message)
                         {
-                            result->push_back(ConvertString(message));
+                            result->push_back(AsUnicode(message));
                         }
                         lua_pop(lua, 1);
                     }
@@ -434,7 +434,7 @@ MessageGlue::StringContainerPtr MessageGlue::CallEventHandler(
             const char* message = lua_tostring(lua, -1);
             if (message)
             {
-                result->push_back(ConvertString(message));
+                result->push_back(AsUnicode(message));
             }
             lua_pop(lua, lua_gettop(lua));
         }

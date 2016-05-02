@@ -43,7 +43,7 @@ int LogGlue::GetLogName(lua_State* lua)
 		if (argumentCount >= 2)
 		{
 			CheckArgument(lua, 2, LUA_TSTRING);
-			server = ConvertString(lua_tostring(lua, 2));
+			server = AsUnicode(lua_tostring(lua, 2));
 		}
 	}
 
@@ -67,7 +67,7 @@ int LogGlue::GetLastLine(lua_State* lua)
 		if (argumentCount >= 3)
 		{
 			CheckArgument(lua, 3, LUA_TSTRING);
-			server = ConvertString(lua_tostring(lua, 3));
+			server = AsUnicode(lua_tostring(lua, 3));
 		}
 	}
 

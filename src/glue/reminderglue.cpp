@@ -55,9 +55,9 @@ int ReminderGlue::AddReminder(lua_State* lua)
 	CheckArgument(lua, 4, LUA_TSTRING);
 
 	time_t seconds = lua_tointeger(lua, 1);
-	UnicodeString server = ConvertString(lua_tostring(lua, 2));
+	UnicodeString server = AsUnicode(lua_tostring(lua, 2));
 	std::string channel = lua_tostring(lua, 3);
-	UnicodeString message = ConvertString(lua_tostring(lua, 4));
+	UnicodeString message = AsUnicode(lua_tostring(lua, 4));
 
 	reminderManager_->CreateReminder(seconds, server, channel, message);
 
@@ -70,9 +70,9 @@ int ReminderGlue::FindReminder(lua_State* lua)
 	CheckArgument(lua, 2, LUA_TSTRING);
 	CheckArgument(lua, 3, LUA_TSTRING);
 
-	UnicodeString server = ConvertString(lua_tostring(lua, 1));
-	UnicodeString channel = ConvertString(lua_tostring(lua, 2));
-	UnicodeString searchString = ConvertString(lua_tostring(lua, 3));
+	UnicodeString server = AsUnicode(lua_tostring(lua, 1));
+	UnicodeString channel = AsUnicode(lua_tostring(lua, 2));
+	UnicodeString searchString = AsUnicode(lua_tostring(lua, 3));
 
 	ReminderManager::ReminderIteratorRange reminders =
 			reminderManager_->FindReminders(server, channel, searchString);

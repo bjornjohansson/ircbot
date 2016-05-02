@@ -34,7 +34,7 @@ int BotGlue::GetMyNick(lua_State* lua)
 	if (lua_gettop(lua) >= 1)
 	{
 		CheckArgument(lua, 1, LUA_TSTRING);
-		server = ConvertString(lua_tostring(lua, 1));
+		server = AsUnicode(lua_tostring(lua, 1));
 	}
 
 	UnicodeString nick = client_->GetNick(server);

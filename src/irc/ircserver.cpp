@@ -201,7 +201,7 @@ void Irc::IrcServer::OnText(const std::string& text)
         ss.imbue(std::locale::classic());
         ss << time(0) << " " << replyTo << ": <" << from << "> "
            << CleanMessageForDisplay(from, message[1], message.IsCtcp());
-        UnicodeString logMessage = ConvertString(ss.str());
+        UnicodeString logMessage = AsUnicode(ss.str());
         LogMessage(replyTo, AsUtf8(logMessage));
 
         // Notify receivers

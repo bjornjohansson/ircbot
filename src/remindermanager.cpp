@@ -249,11 +249,11 @@ void ReminderManager::ReadReminders()
 		Reminder reminder;
 		std::string server;
 		fin >> reminder.Timestamp >> server >> reminder.Channel;
-		reminder.Server = ConvertString(server);
+		reminder.Server = AsUnicode(server);
 		fin.get();
 		std::string message;
 		std::getline(fin, message);
-		reminder.Message = ConvertString(message);
+		reminder.Message = AsUnicode(message);
 		if (reminder.Server.isEmpty() || reminder.Channel.empty()
 				|| reminder.Message.isEmpty())
 		{

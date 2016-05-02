@@ -73,7 +73,7 @@ void Client::Receive(Server& server, const Message& message)
 
     if (!OnPrivMsg(server, message))
     {
-        if (server.GetNick().caseCompare(ConvertString(message.GetPrefix().GetNick()), 0) == 0)
+        if (server.GetNick().caseCompare(AsUnicode(message.GetPrefix().GetNick()), 0) == 0)
         {
             // We do not process messages from ourself
             return;
@@ -151,7 +151,7 @@ UnicodeString Client::GetLastLine(const std::string& nick, long& timestamp,
     UnicodeString result;
     if (res == 0)
     {
-      result = ConvertString(&buffer[0]);
+      result = AsUnicode(&buffer[0]);
     }
     else
     {
@@ -286,8 +286,8 @@ Client::ServerPtr Client::CreateServer(Config::Server::Type serverType,
 bool Client::OnPrivMsg(Server& server, const Message& message)
 {
     std::string fromNick = message.GetPrefix().GetNick();
-    UnicodeString to = ConvertString(message[0]);
-    UnicodeString text = ConvertString(message[1]);
+    UnicodeString to = AsUnicode(message[0]);
+    UnicodeString text = AsUnicode(message[1]);
 
     if (text == (server.GetNick() + AsUnicode(": reload")) || (to
             == server.GetNick() && text == AsUnicode("reload")))
@@ -319,7 +319,7 @@ void Client::ReceivePipeMessage(const std::string& line)
     {
         if (boost::iequals(command, "say"))
         {
-            SendMessage(ConvertString(message), channel, AsUnicode(server));
+            SendMessage(AsUnicode(message), channel, AsUnicode(server));
         }
     } catch (Exception& e)
     {

@@ -98,8 +98,8 @@ int RegexpGlue::AddRegExp(lua_State* lua)
 	CheckArgument(lua, 1, LUA_TSTRING);
 	CheckArgument(lua, 2, LUA_TSTRING);
 
-	UnicodeString regexp = ConvertString(lua_tostring(lua, 1));
-	UnicodeString reply = ConvertString(lua_tostring(lua, 2));
+	UnicodeString regexp = AsUnicode(lua_tostring(lua, 1));
+	UnicodeString reply = AsUnicode(lua_tostring(lua, 2));
 
 	RegExpManager::RegExpResult res = regExpManager_->AddRegExp(regexp, reply);
 	if (res.Success)
@@ -116,7 +116,7 @@ int RegexpGlue::DeleteRegExp(lua_State* lua)
 {
 	CheckArgument(lua, 1, LUA_TSTRING);
 
-	UnicodeString regexp = ConvertString(lua_tostring(lua, 1));
+	UnicodeString regexp = AsUnicode(lua_tostring(lua, 1));
 
 	bool result = regExpManager_->RemoveRegExp(regexp);
 	lua_pushboolean(lua, result);
@@ -128,7 +128,7 @@ int RegexpGlue::RegExpMatchAndReply(lua_State* lua)
 	CheckArgument(lua, 1, LUA_TSTRING);
 	CheckArgument(lua, 2, LUA_TFUNCTION);
 
-	UnicodeString message = ConvertString(lua_tostring(lua, 1));
+	UnicodeString message = AsUnicode(lua_tostring(lua, 1));
 
 	try
 	{
@@ -150,7 +150,7 @@ int RegexpGlue::RegExpFindMatch(lua_State* lua)
 {
 	CheckArgument(lua, 1, LUA_TSTRING);
 
-	UnicodeString message = ConvertString(lua_tostring(lua, 1));
+	UnicodeString message = AsUnicode(lua_tostring(lua, 1));
 
 	RegExpManager::RegExpIteratorRange matches = regExpManager_->FindMatches(
 			message);
@@ -162,7 +162,7 @@ int RegexpGlue::RegExpFindRegExp(lua_State* lua)
 {
 	CheckArgument(lua, 1, LUA_TSTRING);
 
-	UnicodeString searchString = ConvertString(lua_tostring(lua, 1));
+	UnicodeString searchString = AsUnicode(lua_tostring(lua, 1));
 
 	RegExpManager::RegExpIteratorRange matches = regExpManager_->FindRegExps(
 			searchString);
@@ -175,8 +175,8 @@ int RegexpGlue::RegExpChangeReply(lua_State* lua)
 	CheckArgument(lua, 1, LUA_TSTRING);
 	CheckArgument(lua, 2, LUA_TSTRING);
 
-	UnicodeString regexp = ConvertString(lua_tostring(lua, 1));
-	UnicodeString reply = ConvertString(lua_tostring(lua, 2));
+	UnicodeString regexp = AsUnicode(lua_tostring(lua, 1));
+	UnicodeString reply = AsUnicode(lua_tostring(lua, 2));
 
 	bool success = regExpManager_->ChangeReply(regexp, reply);
 	lua_pushboolean(lua, success);
@@ -188,8 +188,8 @@ int RegexpGlue::RegExpChangeRegExp(lua_State* lua)
 	CheckArgument(lua, 1, LUA_TSTRING);
 	CheckArgument(lua, 2, LUA_TSTRING);
 
-	UnicodeString regexp = ConvertString(lua_tostring(lua, 1));
-	UnicodeString newRegexp = ConvertString(lua_tostring(lua, 2));
+	UnicodeString regexp = AsUnicode(lua_tostring(lua, 1));
+	UnicodeString newRegexp = AsUnicode(lua_tostring(lua, 2));
 
 	RegExpManager::RegExpResult res = regExpManager_->ChangeRegExp(regexp,
 			newRegexp);
@@ -249,7 +249,7 @@ UnicodeString RegexpGlue::RegExpOperation(const UnicodeString& reply,
 						const char* r = lua_tostring(lua, -1);
 						if (r)
 						{
-							result = ConvertString(r);
+							result = AsUnicode(r);
 						}
 					}
 					lua_pop(lua, 1);
@@ -259,7 +259,7 @@ UnicodeString RegexpGlue::RegExpOperation(const UnicodeString& reply,
 					const char* message = lua_tostring(lua, -1);
 					if (message != 0)
 					{
-						result = ConvertString(message);
+						result = AsUnicode(message);
 					}
 					lua_pop(lua, 1);
 				}

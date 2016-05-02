@@ -128,7 +128,7 @@ Server::GetChannelNicks(const std::string& channel) const
     {
         return channelNicks->second;
     }
-    throw Exception(__FILE__, __LINE__, ConvertString(
+    throw Exception(__FILE__, __LINE__, AsUnicode(
             "Could not get nicks for channel '" + channel + "'"));
 }
 

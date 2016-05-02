@@ -147,7 +147,7 @@ int Lua::FunctionCall(lua_State* lua, int argCount, int resultCount)
 
 int Lua::CallDispatch(lua_State* lua)
 {
-	UnicodeString name = ConvertString(lua_tostring(lua, lua_upvalueindex(1)));
+	UnicodeString name = AsUnicode(lua_tostring(lua, lua_upvalueindex(1)));
 
 	LuaFunctionsMap::iterator f = luaFunctions_.find(name);
 
@@ -183,7 +183,7 @@ LuaFunction Lua::LoadFile(const std::string& filename)
 		UnicodeString errorMessage;
 		if (msg)
 		{
-			errorMessage = ConvertString(msg);
+			errorMessage = AsUnicode(msg);
 		}
 		else if (result == LUA_ERRSYNTAX)
 		{

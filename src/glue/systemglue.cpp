@@ -65,6 +65,10 @@ int SystemGlue::ConvertString(lua_State* lua)
 
 	std::string input = lua_tostring(lua, 1);
 
-	lua_pushstring(lua, AsUtf8(::ConvertString(input)).c_str());
+    // This used to do character encoding detection and then converting to a
+    // unicode string and back to UTF-8. In later versions only UTF-8 is
+    // supported so this just returns the same string again. The function is
+    // still here to keep backwards compatibility with older scripts.
+	lua_pushstring(lua, input.c_str());
 	return 1;
 }

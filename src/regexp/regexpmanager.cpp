@@ -22,7 +22,8 @@ RegExpManager::RegExpManager(const UnicodeString& regExpFile,
 		std::string regexp, reply;
 		std::getline(ss, regexp, ' ');
 		std::getline(ss, reply);
-		RegExpResult result = AddRegExpImpl(ConvertString(regexp), ConvertString(reply));
+		RegExpResult result = AddRegExpImpl(AsUnicode(regexp),
+                                            AsUnicode(reply));
 		if (!result.Success)
 		{
 			Log << LogLevel::Error << "'" << regexp << "': "
